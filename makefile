@@ -18,9 +18,9 @@ $(call targ,$1.o): $(call code,$1.c) $(call incl,$($1_incl))
 endef
 
 define make_test =
-$(call targ,$1_test): $(call test,$1_test.c) $(call code,$1.c) $(call incl,$($1_incl))
-	$(cc) $(call targ,$1_test) -Isrc/main/ $(call test,$1_test.c)
-	target/$1_test
+$(call targ,$1_test): $(call test,$1_test.c) $(call code,$1.c) $(call incl,$($1_incl)) lib/CuTest.o
+	$(cc) $(call targ,$1_test) -Isrc/main/ -Ilib/ lib/CuTest.o $(call test,$1_test.c)
+	target/$1_test; if [ $$$$? -ne 0 ]; then rm target/$1_test; return 1; fi
 endef
 
 all: $(call targ,main.o) $(call testexe,$(objects_no_main))
@@ -29,6 +29,9 @@ all: $(call targ,main.o) $(call testexe,$(objects_no_main))
 $(foreach object,$(objects),$(eval $(call make_object,$(object))))
 
 $(foreach object,$(objects_no_main),$(eval $(call make_test,$(object))))
+
+lib/CuTest.o: lib/CuTest.c lib/CuTest.h
+	$(cc) lib/CuTest.o -c lib/CuTest.c
 
 clean:
 	rm -f target/*
