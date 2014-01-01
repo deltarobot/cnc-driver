@@ -9,8 +9,8 @@ test = $(patsubst %,src/test/%,$1)
 targ = $(patsubst %,target/%,$1)
 
 define make_object =
-$(call targ,$(1).o): $(call code,$(1).c) $(call incl,$($(1)_incl))
-	$(cc) $(call targ,$(1).o) -c $(call code,$(1).c)
+$(call targ,$1.o): $(call code,$1.c) $(call incl,$($1_incl))
+	$(cc) $(call targ,$1.o) -c $(call code,$1.c)
 endef
 
 all: $(call targ,main.o)
