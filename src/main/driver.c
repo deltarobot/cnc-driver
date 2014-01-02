@@ -36,8 +36,6 @@ int gpioInit( void ) {
     for( i = 0; i < TEST_PINS; ++i ) {
         bcm2835_gpio_fsel( pins[i], BCM2835_GPIO_FSEL_OUTP );
     }
-    // and input hysteresis disabled on GPIOs 0 to 27
-    bcm2835_gpio_set_pad( BCM2835_PAD_GROUP_GPIO_0_27, BCM2835_PAD_SLEW_RATE_UNLIMITED | BCM2835_PAD_DRIVE_8mA );
 
     for( i = 0; i < TEST_PINS; ++i ) {
         bcm2835_gpio_write( pins[i], LOW );
