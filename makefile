@@ -1,32 +1,32 @@
 objects = main driver
-main_incl = driver.h
-driver_incl = driver.h
-driver_lib = bcm2835.o
+main_incl = driver
+driver_incl = driver
+driver_lib = bcm2835
 
 cc=gcc -Isrc/include/ -Ilib/ -Wall -Wextra -pedantic -o
 
-code = $(patsubst %,src/main/%,$1)
-incl = $(patsubst %,src/include/%,$1)
-lib = $(patsubst %,lib/%,$1)
-targ = $(patsubst %,target/%,$1)
-test = $(patsubst %,src/test/%,$1)
-testexe = $(patsubst %,target/%,$1_test)
+code = $(patsubst %,src/main/%.c,$1)
+incl = $(patsubst %,src/include/%.h,$1)
+lib = $(patsubst %,lib/%.o,$1)
+targ = $(patsubst %,target/%.o,$1)
+test = $(patsubst %,src/test/%_test.c,$1)
+testexe = $(patsubst %,target/%_test,$1)
 
 objects_no_main = $(filter-out main,$(objects))
 
 define make_object =
-$(call targ,$1.o): $(call code,$1.c) $(call incl,$($1_incl))
-	$(cc) $(call targ,$1.o) -c $(call code,$1.c)
+$(call targ,$1): $(call code,$1) $(call incl,$($1_incl))
+	$(cc) $(call targ,$1) -c $(call code,$1)
 endef
 
 define make_test =
-$(call targ,$1_test): $(call test,$1_test.c) $(call code,$1.c) $(call incl,$($1_incl)) $(call lib,$($1_lib)) lib/CuTest.o
-	$(cc) $(call targ,$1_test) -Isrc/main/ $(call lib,$($1_lib)) lib/CuTest.o $(call test,$1_test.c)
+$(call testexe,$1): $(call test,$1) $(call code,$1) $(call incl,$($1_incl)) $(call lib,$($1_lib) CuTest)
+	$(cc) $(call testexe,$1) -Isrc/main/ $(call lib,$($1_lib) CuTest) $(call test,$1)
 	target/$1_test; if [ $$$$? -ne 0 ]; then rm target/$1_test; return 1; fi
 endef
 
-all: $(call targ,main.o driver.o) $(call testexe,$(objects_no_main)) lib/bcm2835.o
-	$(cc) target/driver lib/bcm2835.o $(call targ,main.o driver.o)
+all: $(call targ,$(objects)) $(call testexe,$(objects_no_main)) lib/bcm2835.o
+	$(cc) target/driver lib/bcm2835.o $(call targ,$(objects))
 
 $(foreach object,$(objects),$(eval $(call make_object,$(object))))
 
