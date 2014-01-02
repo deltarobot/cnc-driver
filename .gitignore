@@ -2,3 +2,4 @@
 *.exe
 *.stackdump
 target/
+lib/*.o
