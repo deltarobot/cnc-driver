@@ -1,1 +1,2 @@
-#define TEST 8
+int gpioInit( void );
+

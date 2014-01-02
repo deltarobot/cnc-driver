@@ -2,12 +2,8 @@
 #include "driver.h"
 
 int main( void ) {
-    int i;
-
-    printf( "Hello, World\n" );
-
-    for( i = 0; i < TEST; ++i ) {
-        printf( "%d\n", i );
+    if( !gpioInit() ) {
+        return -1;
     }
 
     return 0;

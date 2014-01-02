@@ -1,14 +1,14 @@
 #include "driver.c"
 #include "CuTest.h"
 
-void compileTest(CuTest* tc) {
-	CuAssert( tc, "Everything compiles and runs!", 1 == 1 );
+void startupTest(CuTest* tc) {
+	CuAssert( tc, "Did not successfully initialize.", gpioInit() );
 }
 
 CuSuite* CuGetSuite(void) {
 	CuSuite* suite = CuSuiteNew();
 
-	SUITE_ADD_TEST( suite, compileTest );
+	SUITE_ADD_TEST( suite, startupTest );
 
 	return suite;
 }
