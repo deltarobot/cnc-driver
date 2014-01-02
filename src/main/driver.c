@@ -1,6 +1,27 @@
 #include "driver.h"
 #include "bcm2835.h"
 
+#define TEST_PINS 17
+static RPiGPIOPin pins[TEST_PINS] = {
+    RPI_V2_GPIO_P1_03,
+    RPI_V2_GPIO_P1_05,
+    RPI_V2_GPIO_P1_07,
+    RPI_V2_GPIO_P1_08,
+    RPI_V2_GPIO_P1_10,
+    RPI_V2_GPIO_P1_11,
+    RPI_V2_GPIO_P1_12,
+    RPI_V2_GPIO_P1_13,
+    RPI_V2_GPIO_P1_15,
+    RPI_V2_GPIO_P1_16,
+    RPI_V2_GPIO_P1_18,
+    RPI_V2_GPIO_P1_19,
+    RPI_V2_GPIO_P1_21,
+    RPI_V2_GPIO_P1_22,
+    RPI_V2_GPIO_P1_23,
+    RPI_V2_GPIO_P1_24,
+    RPI_V2_GPIO_P1_26
+};
+
 int gpioInit( void ) {
     int i;
 
@@ -11,15 +32,21 @@ int gpioInit( void ) {
     }
 
     // Configure some GPIO pins fo some testing
-    // Set RPI pin P1-11 to be an output
-    bcm2835_gpio_fsel( RPI_V2_GPIO_P1_11, BCM2835_GPIO_FSEL_OUTP );
+    // Set all the pins to outputs
+    for( i = 0; i < TEST_PINS; ++i ) {
+        bcm2835_gpio_fsel( pins[i], BCM2835_GPIO_FSEL_OUTP );
+    }
     // and input hysteresis disabled on GPIOs 0 to 27
     bcm2835_gpio_set_pad( BCM2835_PAD_GROUP_GPIO_0_27, BCM2835_PAD_SLEW_RATE_UNLIMITED | BCM2835_PAD_DRIVE_8mA );
 
-    for( i = 0; i < 5; ++i ) {
-        bcm2835_gpio_write( RPI_V2_GPIO_P1_11, HIGH );
+    for( i = 0; i < TEST_PINS; ++i ) {
+        bcm2835_gpio_write( pins[i], HIGH );
         bcm2835_delay( 500 );
-        bcm2835_gpio_write( RPI_V2_GPIO_P1_11, LOW );
+        bcm2835_gpio_write( pins[i], LOW );
+        bcm2835_delay( 500 );
+        bcm2835_gpio_write( pins[i], HIGH );
+        bcm2835_delay( 500 );
+        bcm2835_gpio_write( pins[i], LOW );
         bcm2835_delay( 500 );
     }
 
