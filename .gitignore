@@ -1,2 +1,5 @@
 *.iml
+*.exe
+*.stackdump
 target/
+lib/*.o
