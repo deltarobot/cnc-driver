@@ -40,13 +40,13 @@ int gpioInit( void ) {
     bcm2835_gpio_set_pad( BCM2835_PAD_GROUP_GPIO_0_27, BCM2835_PAD_SLEW_RATE_UNLIMITED | BCM2835_PAD_DRIVE_8mA );
 
     for( i = 0; i < TEST_PINS; ++i ) {
-        bcm2835_gpio_write( pins[i], HIGH );
-        bcm2835_delay( 500 );
         bcm2835_gpio_write( pins[i], LOW );
         bcm2835_delay( 500 );
         bcm2835_gpio_write( pins[i], HIGH );
         bcm2835_delay( 500 );
         bcm2835_gpio_write( pins[i], LOW );
+        bcm2835_delay( 500 );
+        bcm2835_gpio_write( pins[i], HIGH );
         bcm2835_delay( 500 );
     }
 
