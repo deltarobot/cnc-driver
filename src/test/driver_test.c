@@ -1,15 +1,69 @@
+#include <stdio.h>
 #include "driver.c"
 #include "CuTest.h"
 
-void startupTest(CuTest* tc) {
-	CuAssert( tc, "Did not successfully initialize.", gpioInit() );
+#define TEST_PINS 17
+static RPiGPIOPin pins[TEST_PINS] = {
+    RPI_V2_GPIO_P1_03,
+    RPI_V2_GPIO_P1_05,
+    RPI_V2_GPIO_P1_07,
+    RPI_V2_GPIO_P1_08,
+    RPI_V2_GPIO_P1_10,
+    RPI_V2_GPIO_P1_11,
+    RPI_V2_GPIO_P1_12,
+    RPI_V2_GPIO_P1_13,
+    RPI_V2_GPIO_P1_15,
+    RPI_V2_GPIO_P1_16,
+    RPI_V2_GPIO_P1_18,
+    RPI_V2_GPIO_P1_19,
+    RPI_V2_GPIO_P1_21,
+    RPI_V2_GPIO_P1_22,
+    RPI_V2_GPIO_P1_23,
+    RPI_V2_GPIO_P1_24,
+    RPI_V2_GPIO_P1_26
+};
+
+
+void startupTest( CuTest* tc ) {
+    bcm2835_set_debug( 1 );
+
+    CuAssert( tc, "Did not successfully initialize.", gpioInit() );
 }
 
-CuSuite* CuGetSuite(void) {
-	CuSuite* suite = CuSuiteNew();
+void testAllPins( CuTest* tc ) {
+    int i;
+    char buffer[16];
+    size_t size = 16;
 
-	SUITE_ADD_TEST( suite, startupTest );
+    // Configure some GPIO pins fo some testing
+    // Set all the pins to outputs
+    for( i = 0; i < TEST_PINS; ++i ) {
+        bcm2835_gpio_fsel( pins[i], BCM2835_GPIO_FSEL_OUTP );
+        bcm2835_gpio_write( pins[i], LOW );
+    }
 
-	return suite;
+    for( i = 0; i < TEST_PINS; ++i ) {
+        printf( "i = %d, GPIO = %d\nPress enter to continue", i, pins[i] );
+        if( getline( &buffer, &size, stdin ) == -1 ) {
+            printf( "No line.\n" );
+        }
+
+        bcm2835_gpio_write( pins[i], LOW );
+        bcm2835_delay( 500 );
+        bcm2835_gpio_write( pins[i], HIGH );
+        bcm2835_delay( 500 );
+        bcm2835_gpio_write( pins[i], LOW );
+        bcm2835_delay( 500 );
+        bcm2835_gpio_write( pins[i], HIGH );
+        bcm2835_delay( 500 );
+    }
 }
 
+CuSuite* CuGetSuite( void ) {
+    CuSuite* suite = CuSuiteNew();
+
+    SUITE_ADD_TEST( suite, startupTest );
+	SUITE_ADD_TEST( suite, testAllPins );
+
+    return suite;
+}
