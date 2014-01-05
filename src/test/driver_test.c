@@ -1,8 +1,10 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "driver.c"
 #include "CuTest.h"
 
 #define TEST_PINS 17
+
 static RPiGPIOPin pins[TEST_PINS] = {
     RPI_V2_GPIO_P1_03,
     RPI_V2_GPIO_P1_05,
@@ -23,7 +25,6 @@ static RPiGPIOPin pins[TEST_PINS] = {
     RPI_V2_GPIO_P1_26
 };
 
-
 void startupTest( CuTest* tc ) {
     bcm2835_set_debug( 1 );
 
@@ -32,11 +33,9 @@ void startupTest( CuTest* tc ) {
 
 void testAllPins( CuTest* tc ) {
     int i;
-    char buffer[16];
-    size_t size = 16;
+    size_t size = 4;
+    char *buffer = malloc( size );
 
-    // Configure some GPIO pins fo some testing
-    // Set all the pins to outputs
     for( i = 0; i < TEST_PINS; ++i ) {
         bcm2835_gpio_fsel( pins[i], BCM2835_GPIO_FSEL_OUTP );
         bcm2835_gpio_write( pins[i], LOW );
@@ -57,6 +56,10 @@ void testAllPins( CuTest* tc ) {
         bcm2835_gpio_write( pins[i], HIGH );
         bcm2835_delay( 500 );
     }
+
+    CuAssert( tc, "Drove all pins successfully.", 1 );
+
+    free( buffer );
 }
 
 CuSuite* CuGetSuite( void ) {
