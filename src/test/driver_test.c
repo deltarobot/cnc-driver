@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "driver.c"
 #include "CuTest.h"
 
@@ -33,8 +31,6 @@ void startupTest( CuTest* tc ) {
 
 void allPinsTest( CuTest* tc ) {
     int i;
-    size_t size = 4;
-    char *buffer = malloc( size );
 
     for( i = 0; i < TEST_PINS; ++i ) {
         bcm2835_gpio_fsel( pins[i], BCM2835_GPIO_FSEL_OUTP );
@@ -42,24 +38,17 @@ void allPinsTest( CuTest* tc ) {
     }
 
     for( i = 0; i < TEST_PINS; ++i ) {
-        printf( "i = %d, GPIO = %d\nPress enter to continue", i, pins[i] );
-        if( getline( &buffer, &size, stdin ) == -1 ) {
-            printf( "No line.\n" );
-        }
-
-        bcm2835_gpio_write( pins[i], LOW );
-        bcm2835_delay( 500 );
         bcm2835_gpio_write( pins[i], HIGH );
-        bcm2835_delay( 500 );
+        bcm2835_delay( 100 );
         bcm2835_gpio_write( pins[i], LOW );
-        bcm2835_delay( 500 );
+        bcm2835_delay( 100 );
         bcm2835_gpio_write( pins[i], HIGH );
-        bcm2835_delay( 500 );
+        bcm2835_delay( 100 );
+        bcm2835_gpio_write( pins[i], LOW );
+        bcm2835_delay( 100 );
     }
 
     CuAssert( tc, "Drove all pins successfully.", 1 );
-
-    free( buffer );
 }
 
 void pwmTest( CuTest* tc ) {
@@ -88,7 +77,7 @@ CuSuite* CuGetSuite( void ) {
     CuSuite* suite = CuSuiteNew();
 
     SUITE_ADD_TEST( suite, startupTest );
-	/* SUITE_ADD_TEST( suite, allPinsTest ); */
+	SUITE_ADD_TEST( suite, allPinsTest );
 	SUITE_ADD_TEST( suite, pwmTest );
 
     return suite;
