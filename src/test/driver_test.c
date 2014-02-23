@@ -2,6 +2,7 @@
 #include "CuTest.h"
 
 #define TEST_PINS 17
+#define DELAY_MS 1
 
 static RPiGPIOPin pins[TEST_PINS] = {
     RPI_V2_GPIO_P1_03,
@@ -39,13 +40,13 @@ void allPinsTest( CuTest* tc ) {
 
     for( i = 0; i < TEST_PINS; ++i ) {
         bcm2835_gpio_write( pins[i], HIGH );
-        bcm2835_delay( 100 );
+        bcm2835_delay( DELAY_MS );
         bcm2835_gpio_write( pins[i], LOW );
-        bcm2835_delay( 100 );
+        bcm2835_delay( DELAY_MS );
         bcm2835_gpio_write( pins[i], HIGH );
-        bcm2835_delay( 100 );
+        bcm2835_delay( DELAY_MS );
         bcm2835_gpio_write( pins[i], LOW );
-        bcm2835_delay( 100 );
+        bcm2835_delay( DELAY_MS );
     }
 
     CuAssert( tc, "Drove all pins successfully.", 1 );
@@ -66,7 +67,7 @@ void pwmTest( CuTest* tc ) {
     while( data < RANGE ) {
         bcm2835_pwm_set_data(PWM_CHANNEL, data);
         data += 8;
-        bcm2835_delay(50);
+        bcm2835_delay( DELAY_MS );
     }
 
     CuAssert( tc, "Successfully drove the PWM pin.", 1 );
