@@ -1,7 +1,8 @@
-objects = main driver
+objects = main driver bootload
 main_incl = driver
 driver_incl = driver
 driver_lib = bcm2835
+bootload_incl = bootload
 
 cc=gcc -Isrc/include/ -Ilib/ -Wall -Wextra -pedantic -o
 
