@@ -78,6 +78,17 @@ int processBootloadLine( char *line ) {
 
 #ifndef TEST
 static int sendByte( uint8_t byte ) {
+    char readByte;
+
+    if( write( fd, &byte, 1 ) == -1 ) {
+        fprintf( stderr, "ERROR: Could not write to the UART" );
+        return 0;
+    }
+    if( read( fd, &readByte, 1 ) > 0 ) {
+        fprintf( stderr, "ERROR: Did not get any response back from the UART" );
+        return 0;
+    }
+
     return 1;
 }
 #endif
