@@ -54,8 +54,6 @@ void allPinsTest( CuTest* tc ) {
 void pwmTest( CuTest* tc ) {
     int data = 0;
 
-    CuAssert( tc, "Did not successfully initialize pwm.", bcm2835_init() );
-
     bcm2835_gpio_fsel( RPI_GPIO_P1_12, BCM2835_GPIO_FSEL_ALT5 );
     // Clock divider is set to 16.
     // With a divider of 16 and a RANGE of 1024, in MARKSPACE mode,
@@ -65,12 +63,13 @@ void pwmTest( CuTest* tc ) {
     bcm2835_pwm_set_mode( PWM_CHANNEL, 1, 1 );
     bcm2835_pwm_set_range( PWM_CHANNEL, RANGE );
 
-    // Vary the PWM m/s ratio between 1/RANGE and (RANGE-1)/RANGE
     while( data < RANGE ) {
         bcm2835_pwm_set_data(PWM_CHANNEL, data);
         data += 8;
         bcm2835_delay(50);
     }
+
+    CuAssert( tc, "Successfully drove the PWM pin.", 1 );
 }
 
 CuSuite* CuGetSuite( void ) {
@@ -79,6 +78,8 @@ CuSuite* CuGetSuite( void ) {
     SUITE_ADD_TEST( suite, startupTest );
 	SUITE_ADD_TEST( suite, allPinsTest );
 	SUITE_ADD_TEST( suite, pwmTest );
+
+	gpioClose();
 
     return suite;
 }

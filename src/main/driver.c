@@ -12,3 +12,7 @@ int gpioInit( void ) {
     return 1;
 }
 
+int gpioClose( void ) {
+    return bcm2835_close();
+}
+
