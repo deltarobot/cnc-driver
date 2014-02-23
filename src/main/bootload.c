@@ -1,5 +1,6 @@
 #include <fcntl.h>
 #include <limits.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -78,15 +79,18 @@ int processBootloadLine( char *line ) {
 
 #ifndef TEST
 static int sendByte( uint8_t byte ) {
-    char readByte;
+    uint8_t readByte;
 
     if( write( fd, &byte, 1 ) == -1 ) {
         fprintf( stderr, "ERROR: Could not write to the UART.\n" );
         return 0;
     }
-    if( read( fd, &readByte, 1 ) > 0 ) {
+    if( read( fd, &readByte, 1 ) != 1 ) {
         fprintf( stderr, "ERROR: Did not get any response back from the UART.\n" );
         return 0;
+    }
+    if( byte != readByte ) {
+        fprintf( stderr, "ERROR: Response was not an echo of the write.\n" );
     }
 
     return 1;
