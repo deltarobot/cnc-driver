@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,7 +8,9 @@
 #include "bootload.h"
 
 #define UART "/dev/ttyAMA0"
-int fd = -1;
+static int fd = -1;
+
+static int sendByte( uint8_t byte );
 
 int uartInit( void ) {
     struct termios tio, newTio;
@@ -45,6 +48,7 @@ int uartInit( void ) {
 
 int uartClose( void ) {
     if( close( fd ) == -1 ) {
+        fd = -1;
         return 0;
     } else {
         return 1;
@@ -52,10 +56,29 @@ int uartClose( void ) {
 }
 
 int processBootloadLine( char *line ) {
-    if( line != NULL ) {
+    long int converted;
+
+    if( *line == 'q' ) {
         return 1;
-    } else {
-        return 0;
     }
+
+    while( *line != '\0' ) {
+        converted = strtol( line, NULL, 16 );
+        if( converted == LONG_MIN || converted == LONG_MAX ) {
+            return 0;
+        }
+        if( !sendByte( ( uint8_t )( converted & 0xFF ) ) ) {
+            return 0;
+        }
+        line += 3;
+    }
+
+    return 1;
 }
+
+#ifndef TEST
+static int sendByte( uint8_t byte ) {
+    return 1;
+}
+#endif
 
