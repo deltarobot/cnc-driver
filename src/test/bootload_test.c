@@ -37,6 +37,7 @@ CuSuite* CuGetSuite( void ) {
     return suite;
 }
 
+#ifdef TEST
 static int sendByte( uint8_t byte ) {
     if( byte != expectedBytes[writeCount] ) {
         return 0;
@@ -45,4 +46,5 @@ static int sendByte( uint8_t byte ) {
         return 1;
     }
 }
+#endif
 
