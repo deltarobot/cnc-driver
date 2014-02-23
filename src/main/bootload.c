@@ -16,7 +16,7 @@ static int sendByte( uint8_t byte );
 int uartInit( void ) {
     struct termios tio, newTio;
 
-    fd = open( UART, O_RDWR | O_NONBLOCK | O_NOCTTY );
+    fd = open( UART, O_RDWR | O_NOCTTY );
     if( fd == -1 ) {
         fprintf( stderr, "ERROR: Couldn't open the terminal.\n" );
         return 0;
@@ -66,9 +66,11 @@ int processBootloadLine( char *line ) {
     while( *line != '\0' ) {
         converted = strtol( line, NULL, 16 );
         if( converted == LONG_MIN || converted == LONG_MAX ) {
+            fprintf( stderr, "ERROR: Could not read the hex line, %s.\n", line );
             return 0;
         }
         if( !sendByte( ( uint8_t )( converted & 0xFF ) ) ) {
+            fprintf( stderr, "ERROR: Problem sending the byte over UART.\n" );
             return 0;
         }
         line += 3;
@@ -91,6 +93,7 @@ static int sendByte( uint8_t byte ) {
     }
     if( byte != readByte ) {
         fprintf( stderr, "ERROR: Response was not an echo of the write.\n" );
+        return 0;
     }
 
     return 1;
