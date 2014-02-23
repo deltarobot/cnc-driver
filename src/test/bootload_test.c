@@ -6,15 +6,15 @@ static void processBootloadLineTest( CuTest* tc );
 static void uartCloseTest( CuTest* tc );
 
 static void uartInitTest( CuTest* tc ) {
-    CuAssert( tc, "Successfully set up for UART communication.", uartInit() );
+    CuAssert( tc, "Did not successfully set up for UART communication.", uartInit() );
 }
 
 static void processBootloadLineTest( CuTest* tc ) {
-    CuAssert( tc, "Successfully set up for UART communication.", processBootloadLine( "00" ) );
+    CuAssert( tc, "Did not process the string correctly.", processBootloadLine( "00" ) );
 }
 
 static void uartCloseTest( CuTest* tc ) {
-    CuAssert( tc, "Successfully closed the UART communication.", uartClose() );
+    CuAssert( tc, "Did not successfully close the UART communication.", uartClose() );
 }
 
 CuSuite* CuGetSuite( void ) {
