@@ -17,7 +17,7 @@ int uartInit( void ) {
 
     fd = open( UART, O_RDWR | O_NONBLOCK | O_NOCTTY );
     if( fd == -1 ) {
-        fprintf( stderr, "ERROR: Couldn't open the terminal" );
+        fprintf( stderr, "ERROR: Couldn't open the terminal.\n" );
         return 0;
     }
 
@@ -39,7 +39,7 @@ int uartInit( void ) {
     }
 
     if ( memcmp( &tio, &newTio, sizeof( tio ) ) != 0 ) {
-        fprintf( stderr, "ERROR: Terminal changes were not applied" );
+        fprintf( stderr, "ERROR: Terminal changes were not applied.\n" );
         return 0;
     }
 
@@ -81,11 +81,11 @@ static int sendByte( uint8_t byte ) {
     char readByte;
 
     if( write( fd, &byte, 1 ) == -1 ) {
-        fprintf( stderr, "ERROR: Could not write to the UART" );
+        fprintf( stderr, "ERROR: Could not write to the UART.\n" );
         return 0;
     }
     if( read( fd, &readByte, 1 ) > 0 ) {
-        fprintf( stderr, "ERROR: Did not get any response back from the UART" );
+        fprintf( stderr, "ERROR: Did not get any response back from the UART.\n" );
         return 0;
     }
 
