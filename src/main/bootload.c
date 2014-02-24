@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <termios.h>
+#include <time.h>
 #include <unistd.h>
 #include "bootload.h"
 
@@ -13,11 +14,12 @@ static int fd = -1;
 
 static int readHexByte( char *line, uint8_t *byte );
 static int sendByte( uint8_t byte );
+static int autoBaud( void );
 
 int uartInit( void ) {
     struct termios tio, newTio;
 
-    fd = open( UART, O_RDWR | O_NOCTTY );
+    fd = open( UART, O_RDWR | O_NONBLOCK | O_NOCTTY );
     if( fd == -1 ) {
         fprintf( stderr, "ERROR: Couldn't open the terminal.\n" );
         return 0;
@@ -39,6 +41,8 @@ int uartInit( void ) {
     if( tcgetattr( fd, &newTio ) == -1 ) {
         return 0;
     }
+
+    autoBaud();
 
     if ( memcmp( &tio, &newTio, sizeof( tio ) ) != 0 ) {
         fprintf( stderr, "WARNING: Terminal changes were not fully applied.\n" );
@@ -96,6 +100,33 @@ static int readHexByte( char *line, uint8_t *byte ) {
 }
 
 #ifndef TEST
+static int autoBaud( void ) {
+    char autoBaud = 'A', readByte = '\0';
+    int complete = 0;
+    struct timespec time;
+
+    while( !complete ) {
+        if( write( fd, &autoBaud, 1 ) == -1 ) {
+            fprintf( stderr, "ERROR: Could not write to the UART.\n" );
+            return 0;
+        }
+        time.tv_sec = 0;
+        time.tv_nsec = 100 * 1000 * 1000;
+        nanosleep( &time, NULL );
+        if( read( fd, &readByte, 1 ) == 1 ) {
+            printf( "char: %c\n", readByte );
+            if( autoBaud == readByte ) {
+                complete = 1;
+            }
+        }
+        printf( "Try complete\n" );
+    }
+
+    /* Make file reads blocking again. */
+    fcntl( fd, F_SETFL, 0 );
+    return 1;
+}
+
 static int sendByte( uint8_t byte ) {
     uint8_t readByte;
 
@@ -108,7 +139,7 @@ static int sendByte( uint8_t byte ) {
         return 0;
     }
     if( byte != readByte ) {
-        fprintf( stderr, "ERROR: Response was not an echo of the write.\n" );
+        fprintf( stderr, "ERROR: Response was not an echo of the write. Expected 0x%02x but got 0x%02x.\n", byte, readByte );
         return 0;
     }
 

@@ -38,6 +38,10 @@ CuSuite* CuGetSuite( void ) {
 }
 
 #ifdef TEST
+static int autoBaud( void ) {
+    return 1;
+}
+
 static int sendByte( uint8_t byte ) {
     if( byte != expectedBytes[writeCount] ) {
         fprintf( stderr, "Wrong byte, expected 0x%02x but got 0x%02x.\n", expectedBytes[writeCount], byte );
