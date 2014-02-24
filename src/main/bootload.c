@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <termios.h>
-#include <time.h>
 #include <unistd.h>
 #include "bootload.h"
 
@@ -42,7 +41,9 @@ int uartInit( void ) {
         return 0;
     }
 
-    autoBaud();
+    if( !autoBaud() ) {
+        return 0;
+    }
 
     if ( memcmp( &tio, &newTio, sizeof( tio ) ) != 0 ) {
         fprintf( stderr, "WARNING: Terminal changes were not fully applied.\n" );
@@ -102,23 +103,23 @@ static int readHexByte( char *line, uint8_t *byte ) {
 #ifndef TEST
 static int autoBaud( void ) {
     char autoBaud = 'A', readByte = '\0';
-    int complete = 0;
-    struct timespec time;
+    int complete = 0, attempts = 1;
 
+    printf( "Beginning Autobaud.\n" );
     while( !complete ) {
+        printf( "Autobaud attempt %d.\n", attempts++ );
         if( write( fd, &autoBaud, 1 ) == -1 ) {
             fprintf( stderr, "ERROR: Could not write to the UART.\n" );
             return 0;
         }
-        time.tv_sec = 0;
-        time.tv_nsec = 100 * 1000 * 1000;
-        nanosleep( &time, NULL );
+        sleep( 1 );
         if( read( fd, &readByte, 1 ) == 1 ) {
             if( autoBaud == readByte ) {
                 complete = 1;
             }
         }
     }
+    printf( "Autobaud finished successfully.\n" );
 
     /* Make file reads blocking again. */
     fcntl( fd, F_SETFL, 0 );
