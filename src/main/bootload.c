@@ -67,7 +67,7 @@ int processBootloadLine( char *line ) {
         return 1;
     }
 
-    while( *line != '\0' ) {
+    while( *line != '\0' && *line != '\r' && *line != '\n' ) {
         if( !readHexByte( line, &upperByte ) || !readHexByte( line + 3, &lowerByte ) ) {
             return 0;
         }
@@ -114,12 +114,10 @@ static int autoBaud( void ) {
         time.tv_nsec = 100 * 1000 * 1000;
         nanosleep( &time, NULL );
         if( read( fd, &readByte, 1 ) == 1 ) {
-            printf( "char: %c\n", readByte );
             if( autoBaud == readByte ) {
                 complete = 1;
             }
         }
-        printf( "Try complete\n" );
     }
 
     /* Make file reads blocking again. */

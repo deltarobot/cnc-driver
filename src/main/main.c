@@ -27,6 +27,8 @@ int main( int argc, char *argv[] ) {
         uartClose();
     }
 
+    gpioClose();
+
     free( line );
     exit( EXIT_SUCCESS );
 }
