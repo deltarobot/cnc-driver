@@ -24,12 +24,7 @@ int uartInit( void ) {
         return 0;
     }
 
-    if( tcgetattr( fd, &tio ) == -1 ) {
-        return 0;
-    }
-
-    tio.c_iflag=0;
-    tio.c_oflag=0;
+    memset( &tio, 0, sizeof( tio ) );
     tio.c_cflag = CS8 | CREAD | CLOCAL;
     tio.c_cc[VMIN]=1;
     tio.c_cc[VTIME]=5;
