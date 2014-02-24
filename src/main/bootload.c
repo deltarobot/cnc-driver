@@ -11,6 +11,7 @@
 #define UART "/dev/ttyAMA0"
 static int fd = -1;
 
+static int readHexByte( char *line, uint8_t *byte );
 static int sendByte( uint8_t byte );
 
 int uartInit( void ) {
@@ -40,8 +41,7 @@ int uartInit( void ) {
     }
 
     if ( memcmp( &tio, &newTio, sizeof( tio ) ) != 0 ) {
-        fprintf( stderr, "ERROR: Terminal changes were not applied.\n" );
-        return 0;
+        fprintf( stderr, "WARNING: Terminal changes were not fully applied.\n" );
     }
 
     return 1;
@@ -57,25 +57,41 @@ int uartClose( void ) {
 }
 
 int processBootloadLine( char *line ) {
-    long int converted;
+    uint8_t upperByte, lowerByte;
 
     if( *line == 'q' ) {
         return 1;
     }
 
     while( *line != '\0' ) {
-        converted = strtol( line, NULL, 16 );
-        if( converted == LONG_MIN || converted == LONG_MAX ) {
-            fprintf( stderr, "ERROR: Could not read the hex line, %s.\n", line );
+        if( !readHexByte( line, &upperByte ) || !readHexByte( line + 3, &lowerByte ) ) {
             return 0;
         }
-        if( !sendByte( ( uint8_t )( converted & 0xFF ) ) ) {
+        if( !sendByte( lowerByte ) || !sendByte( upperByte ) ) {
             fprintf( stderr, "ERROR: Problem sending the byte over UART.\n" );
             return 0;
         }
-        line += 3;
+        line += 6;
     }
 
+    return 1;
+}
+
+static int readHexByte( char *line, uint8_t *byte ) {
+    long int converted;
+
+    if( *line == '\0' ) {
+        fprintf( stderr, "ERROR: Reached the end of the line, odd number of bytes?\n" );
+        return 0;
+    }
+
+    converted = strtol( line, NULL, 16 );
+    if( converted == LONG_MIN || converted == LONG_MAX ) {
+        fprintf( stderr, "ERROR: Could not read the hex line, %s.\n", line );
+        return 0;
+    }
+
+    *byte = ( uint8_t )( converted & 0xFF );
     return 1;
 }
 

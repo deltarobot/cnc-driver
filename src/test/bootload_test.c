@@ -14,10 +14,10 @@ static void uartInitTest( CuTest* tc ) {
 
 static void processBootloadLineTest( CuTest* tc ) {
     writeCount = 0;
-    expectedBytes[0] = 0x00;
-    expectedBytes[1] = 0xFF;
-    expectedBytes[2] = 0x55;
-    expectedBytes[3] = 0xAA;
+    expectedBytes[0] = 0xFF;
+    expectedBytes[1] = 0x00;
+    expectedBytes[2] = 0xAA;
+    expectedBytes[3] = 0x55;
     CuAssert( tc, "Did not process data line correctly.", processBootloadLine( "00 FF 55 AA " ) );
     CuAssert( tc, "Did not process all of the lines.", writeCount == 4 );
     CuAssert( tc, "Did not process last line correctly.", processBootloadLine( "q" ) );
@@ -40,6 +40,7 @@ CuSuite* CuGetSuite( void ) {
 #ifdef TEST
 static int sendByte( uint8_t byte ) {
     if( byte != expectedBytes[writeCount] ) {
+        fprintf( stderr, "Wrong byte, expected 0x%02x but got 0x%02x.\n", expectedBytes[writeCount], byte );
         return 0;
     } else {
         writeCount++;
