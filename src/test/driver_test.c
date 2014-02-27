@@ -27,7 +27,7 @@ static RPiGPIOPin pins[TEST_PINS] = {
 void startupTest( CuTest* tc ) {
     bcm2835_set_debug( 1 );
 
-    CuAssert( tc, "Did not successfully initialize.", gpioInit( NORMAL ) );
+    CuAssert( tc, "Did not successfully initialize.", gpioInit() );
 }
 
 void allPinsTest( CuTest* tc ) {

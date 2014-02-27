@@ -4,32 +4,46 @@
 #include "bootload.h"
 #include "driver.h"
 
-int main( int argc, char *argv[] ) {
+typedef int ( *LineHandler )( char *line );
+
+#define BOOTLOAD_ON 0xFE
+#define BOOTLOAD_OFF 0xFF
+
+static int processMotorCommandLine( char *line );
+
+int main( void ) {
     char *line = NULL;
     size_t size = 0;
-    GpioType gpioType = NORMAL;
+    LineHandler lineHandler = processMotorCommandLine;
 
-    if( argc > 1 && strcmp( argv[1], "-b" ) == 0 ) {
-        gpioType = BOOTLOAD;
-    }
-
-    if( !gpioInit( gpioType ) ) {
+    if( !gpioInit() ) {
         exit( EXIT_FAILURE );
     }
 
-    if( gpioType == BOOTLOAD ) {
-        uartInit();
-        while( getline( &line, &size, stdin ) != -1 ) {
-            if( !processBootloadLine( line ) ) {
-                exit( EXIT_FAILURE );
-            }
+    while( getline( &line, &size, stdin ) != -1 ) {
+        switch( ( unsigned char )line[0] ) {
+            case BOOTLOAD_ON:
+                uartInit();
+                lineHandler = processBootloadLine;
+                break;
+            case BOOTLOAD_OFF:
+                uartClose();
+                lineHandler = processMotorCommandLine;
+                break;
         }
-        uartClose();
+        if( !lineHandler( line ) ) {
+            exit( EXIT_FAILURE );
+        }
     }
 
     gpioClose();
 
     free( line );
     exit( EXIT_SUCCESS );
+}
+
+static int processMotorCommandLine( char *line ) {
+    printf( "%s\n", line );
+    return 1;
 }
 
