@@ -1,3 +1,3 @@
-int gpioInit( void );
-int gpioClose( void );
+extern int gpioInit( void );
+extern int gpioClose( void );
 

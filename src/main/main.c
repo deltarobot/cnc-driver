@@ -36,14 +36,25 @@ int main( void ) {
         }
     }
 
-    gpioClose();
+    if( !gpioClose() ) {
+        exit( EXIT_FAILURE );
+    }
 
     free( line );
     exit( EXIT_SUCCESS );
 }
 
 static int processMotorCommandLine( char *line ) {
+    char send[10], receive[10];
+    size_t size = 0;
+
+    memset( receive, '\0', sizeof( send ) );
+    while( line[size] != '\n' ) {
+        send[size] = line[size];
+        size++;
+    }
     printf( "%s\n", line );
+    bcm2835_spi_transfernb( send, receive,  size );
     return 1;
 }
 

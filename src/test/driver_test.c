@@ -77,10 +77,8 @@ CuSuite* CuGetSuite( void ) {
     CuSuite* suite = CuSuiteNew();
 
     SUITE_ADD_TEST( suite, startupTest );
-	SUITE_ADD_TEST( suite, allPinsTest );
-	SUITE_ADD_TEST( suite, pwmTest );
-
-	gpioClose();
+    SUITE_ADD_TEST( suite, allPinsTest );
+    SUITE_ADD_TEST( suite, pwmTest );
 
     return suite;
 }
