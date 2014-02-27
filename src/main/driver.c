@@ -25,17 +25,23 @@ int gpioClose( void ) {
 }
 
 int processMotorCommandLine( char *line ) {
-    char send[10], receive[10];
-    size_t size = 0;
+    size_t bufferSize = 10, size = 0;
+    char send[bufferSize], receive[bufferSize];
 
-    memset( receive, '\0', sizeof( send ) );
-    while( line[size] != '\n' ) {
+    memset( send, '\0', bufferSize );
+    memset( receive, '\0', bufferSize );
+    while( line[size] != '\n' && size < bufferSize ) {
         send[size] = line[size];
         size++;
     }
-    printf( "%s\n", line );
     bcm2835_spi_transfernb( send, receive,  size );
-    return 1;
+
+    if( memcmp( send, receive, size ) == 0 ) {
+        return 1;
+    } else {
+        fprintf( stderr, "ERROR: No echo back on SPI from the controller.\n" );
+        return 0;
+    }
 }
 
 static void setupUartPins( void ) {

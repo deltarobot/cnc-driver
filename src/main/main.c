@@ -30,6 +30,7 @@ int main( void ) {
                 break;
         }
         if( !lineHandler( line ) ) {
+            fprintf( stderr, "ERROR: Problem processing line: %s.\n", line );
             exit( EXIT_FAILURE );
         }
     }
