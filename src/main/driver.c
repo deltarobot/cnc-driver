@@ -27,19 +27,25 @@ int gpioClose( void ) {
 int processMotorCommandLine( char *line ) {
     size_t bufferSize = 10, size = 0;
     char send[bufferSize], receive[bufferSize];
+    int i;
 
     memset( send, '\0', bufferSize );
     memset( receive, '\0', bufferSize );
-    while( line[size] != '\n' && size < bufferSize ) {
+    while( line[size] != '\n' && size < bufferSize - 1 ) {
         send[size] = line[size];
         size++;
     }
+    send[size] = '\0';
+    size++;
     bcm2835_spi_transfernb( send, receive,  size );
 
-    if( memcmp( send, receive, size ) == 0 ) {
+    if( memcmp( send, receive + 1, size - 1 ) == 0 ) {
         return 1;
     } else {
         fprintf( stderr, "ERROR: No echo back on SPI from the controller.\n" );
+        for( i = 0; i < size - 1; i++ ) {
+            printf( "Sent: %02x, Got: %02x\n", send[i], receive[i + 1] );
+        }
         return 0;
     }
 }
