@@ -1,6 +1,6 @@
 objects = main driver bootload
-main_incl = driver bootload
-driver_incl = driver
+main_incl = driver bootload comm
+driver_incl = driver comm
 driver_lib = bcm2835
 bootload_incl = bootload
 

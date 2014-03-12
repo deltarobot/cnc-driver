@@ -1,4 +1,7 @@
+#include <stdint.h>
 #include <stdio.h>
+#include <string.h>
+#include "comm.h"
 #include "driver.h"
 #include "bcm2835.h"
 
@@ -24,17 +27,13 @@ int gpioClose( void ) {
     return bcm2835_close();
 }
 
-int processMotorCommandLine( char *line ) {
-    char send[10], receive[10];
-    size_t size = 0;
+int processMotorCommand( char *command ) {
+    char receive[sizeof( Command_t ) + 1];
 
-    memset( receive, '\0', sizeof( send ) );
-    while( line[size] != '\n' ) {
-        send[size] = line[size];
-        size++;
-    }
-    printf( "%s\n", line );
-    bcm2835_spi_transfernb( send, receive,  size );
+    memset( receive, '\0', sizeof( receive ) );
+
+    printf( "Sending: %s\n", command );
+    bcm2835_spi_transfernb( command, receive, sizeof( Command_t ) + 1 );
     return 1;
 }
 
