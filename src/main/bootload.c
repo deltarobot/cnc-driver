@@ -36,12 +36,12 @@ int uartInit( void ) {
         return 0;
     }
 
-    if( !autoBaud() ) {
-        return 0;
-    }
-
     if ( memcmp( &tio, &newTio, sizeof( tio ) ) != 0 ) {
         fprintf( stderr, "WARNING: Terminal changes were not fully applied.\n" );
+    }
+
+    if( !autoBaud() ) {
+        return 0;
     }
 
     return 1;
