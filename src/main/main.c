@@ -25,6 +25,8 @@ int main( void ) {
             if( !uartInit() || !bootload() || !uartClose() ) {
                 fprintf( stderr, "ERROR: Encountered problem while bootloading.\n" );
             }
+        } else if( character == EndOfFile ) {
+            break;
         } else {
             motorCommandLine( character );
         }
@@ -46,7 +48,7 @@ static int setCharByChar( void ) {
     }
     tio = tio;
     tio.c_lflag &= ~ICANON; /* Non-canonical mode */
-    tio.c_cc[VMIN] = sizeof( Command_t ) - 1;
+    tio.c_cc[VMIN] = 1;
     tio.c_cc[VTIME] = 0;
     if( tcsetattr( 0, TCSANOW, &tio ) == -1 ) {
         fprintf( stderr, "ERROR: Could not update the termios for stdin.\n" );
@@ -66,11 +68,14 @@ static int setCharByChar( void ) {
 
 static int motorCommandLine( char commandType ) {
     char command[sizeof( Command_t ) + 1];
+    size_t i;
 
     command[0] = commandType;
-    if( read( 0, &command[1], sizeof( Command_t ) - 1 ) != sizeof( Command_t ) - 1 ) {
-        fprintf( stderr, "ERROR: Did not get enough bytes while processing command of type %d.\n", commandType );
-        return 0;
+    for( i = 1; i < sizeof( Command_t ); i++ ) {
+        if( read( 0, &command[i], 1 ) == -1 ) {
+            fprintf( stderr, "ERROR: Could not read a byte from stdin while processing command of type %d.\n", commandType );
+            return 0;
+        }
     }
     command[sizeof( Command_t )] = '\0';
 

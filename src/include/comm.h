@@ -4,6 +4,7 @@ enum CommandType {
     NoOp = 0,
     ConstantSpeed = 1,
     Accelerating = 2,
+    EndOfFile = 4,
     Bootload = 255
 };
 
