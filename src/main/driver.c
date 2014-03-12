@@ -33,14 +33,17 @@ int processMotorCommand( char *command ) {
     for( i = 0; i < MAX_RETRIES && !successful; i++ ) {
         memset( receive, '\0', sizeof( receive ) );
 
-        bcm2835_spi_transfernb( command, receive, sizeof( Command_t ) + 1 );
-        if( memcmp( command, &receive[1], sizeof( Command_t ) ) == 0 ) {
+        bcm2835_spi_transfernb( command, receive, sizeof( receive ) );
+        if( memcmp( command, receive + 1, sizeof( Command_t ) ) == 0 ) {
             successful = 1;
         }
     }
 
     if( !successful ) {
-        fprintf( stderr, "ERROR: Gave up on sending command after multiple attempts.\nCommand was {%s}.\n", command );
+        fprintf( stderr, "ERROR: Gave up on sending command after multiple attempts.\n" );
+        for( i = 0; i < sizeof( receive ); i++ ) {
+            printf( "Sent: %02x, Got: %02x\n", command[i], receive[i + 1] );
+        }
     }
     return successful;
 }
@@ -54,7 +57,7 @@ static void setupSpiPins( void ) {
     bcm2835_spi_begin();
     bcm2835_spi_setBitOrder( BCM2835_SPI_BIT_ORDER_MSBFIRST );
     bcm2835_spi_setDataMode( BCM2835_SPI_MODE0 );
-    bcm2835_spi_setClockDivider( BCM2835_SPI_CLOCK_DIVIDER_65536 );
+    bcm2835_spi_setClockDivider( BCM2835_SPI_CLOCK_DIVIDER_256 );
     bcm2835_spi_chipSelect( BCM2835_SPI_CS0 );
     bcm2835_spi_setChipSelectPolarity( BCM2835_SPI_CS0, LOW );
 }
