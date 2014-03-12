@@ -24,13 +24,17 @@ static RPiGPIOPin pins[TEST_PINS] = {
     RPI_V2_GPIO_P1_26
 };
 
-void startupTest( CuTest* tc ) {
+static void startupTest( CuTest* tc );
+static void allPinsTest( CuTest* tc );
+static void pwmTest( CuTest* tc );
+
+static void startupTest( CuTest* tc ) {
     bcm2835_set_debug( 1 );
 
     CuAssert( tc, "Did not successfully initialize.", gpioInit() );
 }
 
-void allPinsTest( CuTest* tc ) {
+static void allPinsTest( CuTest* tc ) {
     int i;
 
     for( i = 0; i < TEST_PINS; ++i ) {
@@ -52,7 +56,7 @@ void allPinsTest( CuTest* tc ) {
     CuAssert( tc, "Drove all pins successfully.", 1 );
 }
 
-void pwmTest( CuTest* tc ) {
+static void pwmTest( CuTest* tc ) {
     int data = 0;
 
     bcm2835_gpio_fsel( RPI_GPIO_P1_12, BCM2835_GPIO_FSEL_ALT5 );
