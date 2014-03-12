@@ -5,8 +5,7 @@
 #include "driver.h"
 #include "bcm2835.h"
 
-#define PWM_CHANNEL 0
-#define RANGE 1024
+#define MAX_RETRIES 5
 
 static void setupUartPins( void );
 static void setupSpiPins( void );
@@ -29,12 +28,21 @@ int gpioClose( void ) {
 
 int processMotorCommand( char *command ) {
     char receive[sizeof( Command_t ) + 1];
+    int successful = 0, i;
 
-    memset( receive, '\0', sizeof( receive ) );
+    for( i = 0; i < MAX_RETRIES && !successful; i++ ) {
+        memset( receive, '\0', sizeof( receive ) );
 
-    printf( "Sending: %s\n", command );
-    bcm2835_spi_transfernb( command, receive, sizeof( Command_t ) + 1 );
-    return 1;
+        bcm2835_spi_transfernb( command, receive, sizeof( Command_t ) + 1 );
+        if( memcmp( command, &receive[1], sizeof( Command_t ) ) == 0 ) {
+            successful = 1;
+        }
+    }
+
+    if( !successful ) {
+        fprintf( stderr, "ERROR: Gave up on sending command after multiple attempts.\nCommand was {%s}.\n", command );
+    }
+    return successful;
 }
 
 static void setupUartPins( void ) {

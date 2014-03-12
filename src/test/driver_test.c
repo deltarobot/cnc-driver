@@ -1,6 +1,8 @@
 #include "driver.c"
 #include "CuTest.h"
 
+#define PWM_CHANNEL 0
+#define RANGE 1024
 #define TEST_PINS 17
 #define DELAY_MS 1
 
