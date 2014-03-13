@@ -79,7 +79,7 @@ static int openReadPipe( void ) {
     int fd;
 
     if( readPipe == NULL ) {
-        printf( "No pipe to open, using stdin.\n" );
+        fprintf( stderr, "No pipe to open, using stdin.\n" );
         return setCharByChar();
     }
     
@@ -94,7 +94,7 @@ static int openReadPipe( void ) {
     dup( fd );
     close( fd );
 
-    printf( "Opened pipe at %s.\n", readPipe );
+    fprintf( stderr, "Opened pipe at %s.\n", readPipe );
     return 1;
 }
 
