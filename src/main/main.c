@@ -40,11 +40,11 @@ int main( void ) {
 }
 
 static int setCharByChar( void ) {
-    struct termios tio, newTio;
+    struct termios tio;
 
     if( tcgetattr( 0, &tio ) == -1 ) {
-        fprintf( stderr, "ERROR: Could not get the termios for stdin.\n" );
-        return 0;
+        printf( "Detected reading from pipe.\n" );
+        return 1;
     }
     tio = tio;
     tio.c_lflag &= ~ICANON; /* Non-canonical mode */
@@ -52,14 +52,6 @@ static int setCharByChar( void ) {
     tio.c_cc[VTIME] = 0;
     if( tcsetattr( 0, TCSANOW, &tio ) == -1 ) {
         fprintf( stderr, "ERROR: Could not update the termios for stdin.\n" );
-        return 0;
-    }
-    if( tcgetattr( 0, &newTio ) == -1 ) {
-        fprintf( stderr, "ERROR: Could not get the termios for stdin.\n" );
-        return 0;
-    }
-    if ( memcmp( &tio, &newTio, sizeof( tio ) ) != 0 ) {
-        fprintf( stderr, "WARNING: Terminal changes were not fully applied.\n" );
         return 0;
     }
     
