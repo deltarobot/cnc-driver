@@ -8,25 +8,28 @@
 #include "comm.h"
 #include "driver.h"
 
-static int openPipe( int argc, const char *argv[] );
+static char *readPipe = NULL;
+
+static int startupAndConfigure( int argc, char *argv[] );
+static int openReadPipe( void );
 static int setCharByChar( void );
 static int motorCommandLine( char commandType );
 static int bootload( void );
 
-int main( int argc, const char *argv[] ) {
+int main( int argc, char *argv[] ) {
     char character;
 
     if( !gpioInit() ) {
         exit( EXIT_FAILURE );
     }
 
-    if( !openPipe( argc, argv ) ) {
+    if( !startupAndConfigure( argc, argv ) ) {
         exit( EXIT_FAILURE );
     }
 
     for( ;; ) {
         if( read( 0, &character, 1 ) == 0 ) {
-            if( !openPipe( argc, argv ) ) {
+            if( !openReadPipe() ) {
                 exit( EXIT_FAILURE );   
             }
             continue;
@@ -49,18 +52,41 @@ int main( int argc, const char *argv[] ) {
     exit( EXIT_SUCCESS );
 }
 
-static int openPipe( int argc, const char *argv[] ) {
+static int startupAndConfigure( int argc, char *argv[] ) {
+    int i;
+
+    for( i = 1; i < argc; i++ ) {
+        if( argv[i][0] == '-' ) {
+            switch( argv[i][1] ) {
+                case 'r':
+                    readPipe = argv[i + 1];
+                    break;
+                default:
+                    fprintf( stderr, "ERROR: Unknown argument: %s\n", argv[i] );
+                    return 0;
+            }
+        }
+    }
+
+    if( !openReadPipe() ) {
+        return 0;
+    }
+
+    return 1;
+}
+
+static int openReadPipe( void ) {
     int fd;
 
-    if( argc == 1 ) {
+    if( readPipe == NULL ) {
         printf( "No pipe to open, using stdin.\n" );
         return setCharByChar();
     }
     
-    fd = open( argv[1], O_RDONLY );
+    fd = open( readPipe, O_RDONLY );
 
     if( fd == -1 ) {
-        fprintf( stderr, "Could not open pipe at %s.\n", argv[1] );
+        fprintf( stderr, "Could not open pipe at %s.\n", readPipe );
         return 0;
     }
 
@@ -68,7 +94,7 @@ static int openPipe( int argc, const char *argv[] ) {
     dup( fd );
     close( fd );
 
-    printf( "Opened pipe at %s.\n", argv[1] );
+    printf( "Opened pipe at %s.\n", readPipe );
     return 1;
 }
 
