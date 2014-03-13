@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,20 +8,29 @@
 #include "comm.h"
 #include "driver.h"
 
+static int openPipe( int argc, const char *argv[] );
 static int setCharByChar( void );
 static int motorCommandLine( char commandType );
 static int bootload( void );
 
-int main( void ) {
+int main( int argc, const char *argv[] ) {
     char character;
 
     if( !gpioInit() ) {
         exit( EXIT_FAILURE );
     }
 
-    setCharByChar();
+    if( !openPipe( argc, argv ) ) {
+        exit( EXIT_FAILURE );
+    }
 
-    while( read( 0, &character, 1 ) == 1 ) {
+    for( ;; ) {
+        if( read( 0, &character, 1 ) == 0 ) {
+            if( !openPipe( argc, argv ) ) {
+                exit( EXIT_FAILURE );   
+            }
+            continue;
+        }
         if( character == Bootload ) {
             if( !uartInit() || !bootload() || !uartClose() ) {
                 fprintf( stderr, "ERROR: Encountered problem while bootloading.\n" );
@@ -39,12 +49,35 @@ int main( void ) {
     exit( EXIT_SUCCESS );
 }
 
+static int openPipe( int argc, const char *argv[] ) {
+    int fd;
+
+    if( argc == 1 ) {
+        printf( "No pipe to open, using stdin.\n" );
+        return setCharByChar();
+    }
+    
+    fd = open( argv[1], O_RDONLY );
+
+    if( fd == -1 ) {
+        fprintf( stderr, "Could not open pipe at %s.\n", argv[1] );
+        return 0;
+    }
+
+    close( 0 );
+    dup( fd );
+    close( fd );
+
+    printf( "Opened pipe at %s.\n", argv[1] );
+    return 1;
+}
+
 static int setCharByChar( void ) {
     struct termios tio;
 
     if( tcgetattr( 0, &tio ) == -1 ) {
-        printf( "Detected reading from pipe.\n" );
-        return 1;
+        fprintf( stderr, "ERROR: Could not get termios for stdin.\n" );
+        return 0;
     }
     tio = tio;
     tio.c_lflag &= ~ICANON; /* Non-canonical mode */
