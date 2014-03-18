@@ -54,8 +54,9 @@ int processMotorCommand( char *command ) {
 int resetController( void ) {
     bcm2835_gpio_fsel( RPI_V2_GPIO_P1_07, BCM2835_GPIO_FSEL_OUTP );
     bcm2835_gpio_write( RPI_V2_GPIO_P1_07, LOW );
-    bcm2835_delay( 100 );
+    bcm2835_delay( 1 );
     setupResetPin();
+    bcm2835_delay( 1 );
     return 1;
 }
 

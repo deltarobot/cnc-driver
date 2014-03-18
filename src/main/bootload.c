@@ -7,6 +7,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include "bootload.h"
+#include "driver.h"
 
 #define UART "/dev/ttyAMA0"
 static int fd = -1;
@@ -102,6 +103,10 @@ static int autoBaud( void ) {
 
     printf( "Beginning Autobaud.\n" );
     while( !complete ) {
+        if( ( attempts - 1 ) % 5 == 0 ) {
+            printf( "Resetting the microcontroller.\n" );
+            resetController();
+        }
         printf( "Autobaud attempt %d.\n", attempts++ );
         if( write( fd, &autoBaud, 1 ) == -1 ) {
             fprintf( stderr, "ERROR: Could not write to the UART.\n" );

@@ -35,7 +35,7 @@ int main( int argc, char *argv[] ) {
             continue;
         }
         if( character == Bootload ) {
-            if( !uartInit() || !resetController() || !bootload() || !uartClose() ) {
+            if( !uartInit() || !bootload() || !uartClose() ) {
                 fprintf( stderr, "ERROR: Encountered problem while bootloading.\n" );
             }
         } else if( character == EndOfFile ) {
