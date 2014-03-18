@@ -38,6 +38,7 @@ int main( int argc, char *argv[] ) {
             if( !uartInit() || !bootload() || !uartClose() ) {
                 fprintf( stderr, "ERROR: Encountered problem while bootloading.\n" );
             }
+            printf( "Completed bootload.\n" );
         } else if( character == EndOfFile ) {
             break;
         } else {
@@ -140,7 +141,7 @@ static int bootload( void ) {
     size_t size = 0;
     int done = 0;
 
-    while( getline( &line, &size, stdin ) != -1 || done ) {
+    while( getline( &line, &size, stdin ) != -1 && !done ) {
         if( ( unsigned char )line[0] == Bootload ) {
             done = 1;
         } else if( !processBootloadLine( line ) ) {
