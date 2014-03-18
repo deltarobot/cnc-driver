@@ -7,6 +7,7 @@
 
 #define MAX_RETRIES 5
 
+static void setupResetPin( void );
 static void setupUartPins( void );
 static void setupSpiPins( void );
 
@@ -15,6 +16,7 @@ int gpioInit( void ) {
         return 0;
     }
 
+    setupResetPin();
     setupUartPins();
     setupSpiPins();
 
@@ -28,7 +30,8 @@ int gpioClose( void ) {
 
 int processMotorCommand( char *command ) {
     char receive[sizeof( Command_t ) + 1];
-    int successful = 0, i;
+    int successful = 0;
+    size_t i;
 
     for( i = 0; i < MAX_RETRIES && !successful; i++ ) {
         memset( receive, '\0', sizeof( receive ) );
@@ -46,6 +49,18 @@ int processMotorCommand( char *command ) {
         }
     }
     return successful;
+}
+
+int resetController( void ) {
+    bcm2835_gpio_fsel( RPI_V2_GPIO_P1_07, BCM2835_GPIO_FSEL_OUTP );
+    bcm2835_gpio_write( RPI_V2_GPIO_P1_07, LOW );
+    bcm2835_delay( 100 );
+    setupResetPin();
+    return 1;
+}
+
+static void setupResetPin( void ) {
+    bcm2835_gpio_fsel( RPI_V2_GPIO_P1_07, BCM2835_GPIO_FSEL_INPT );
 }
 
 static void setupUartPins( void ) {
