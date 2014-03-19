@@ -27,12 +27,12 @@ $(call lib,$1): lib/$1.c lib/$1.h
 endef
 
 define make_test =
-$(call testexe,$1): $(call test,$1) $(call code,$1) $(call incl,$($1_incl)) $(call lib,$($1_lib) CuTest)
+$(call testexe,$1): target $(call test,$1) $(call code,$1) $(call incl,$($1_incl)) $(call lib,$($1_lib) CuTest)
 	$(cc) $(call testexe,$1) -Isrc/main/ -DTEST $(call test,$1) $(call lib,$($1_lib) CuTest)
 	target/$1_test; if [ $$$$? -ne 0 ]; then rm target/$1_test; exit 1; fi
 endef
 
-all: $(call targ,$(objects)) $(call testexe,$(objects_no_main)) $(call lib,$(all_libs))
+all: target $(call targ,$(objects)) $(call testexe,$(objects_no_main)) $(call lib,$(all_libs))
 	$(cc) target/driver $(call targ,$(objects)) $(call lib,$(all_libs))
 
 $(foreach object,$(objects),$(eval $(call make_object,$(object))))
@@ -41,5 +41,14 @@ $(foreach object,$(objects_no_main),$(eval $(call make_test,$(object))))
 
 $(foreach lib,$(all_libs) CuTest,$(eval $(call make_lib,$(lib))))
 
+~/bin:
+	mkdir ~/bin
+
+install: ~/bin all
+	cp target/driver ~/bin/
+
+target:
+	mkdir target
+
 clean:
-	rm -f target/*
+	rm -r target
