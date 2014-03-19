@@ -14,6 +14,7 @@ static int startupAndConfigure( int argc, char *argv[] );
 static int openReadPipe( void );
 static int setCharByChar( void );
 static int motorCommandLine( char commandType );
+static int readLineByChar( char *line, size_t size, int fd );
 static int bootload( void );
 
 int main( int argc, char *argv[] ) {
@@ -136,12 +137,31 @@ static int motorCommandLine( char commandType ) {
     return 1;
 }
 
+static int readLineByChar( char *line, size_t size, int fd ) {
+    size_t i;
+    char character;
+
+    for( i = 0; i < size - 1; i++ ) {
+        if( read( 0, &character, fd ) == 0 ) {
+            return 0;
+        }
+        line[i] = character;
+        if( line[i] == '\n' ) {
+            break;
+        }
+    }
+
+    line[i + 1] = '\0';
+    return 1;
+
+}
+
 static int bootload( void ) {
-    char *line = NULL;
-    size_t size = 0;
+    char line[100];
     int done = 0;
 
-    while( getline( &line, &size, stdin ) != -1 && !done ) {
+    while( !done ) {
+        readLineByChar( line, sizeof( line ), 1 );
         if( ( unsigned char )line[0] == Bootload ) {
             done = 1;
         } else if( !processBootloadLine( line ) ) {
@@ -150,7 +170,6 @@ static int bootload( void ) {
         }
     }
 
-    free( line );
     return 1;
 }
 
