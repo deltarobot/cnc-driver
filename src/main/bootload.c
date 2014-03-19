@@ -29,8 +29,8 @@ int uartInit( void ) {
     tio.c_cflag = CS8 | CREAD | CLOCAL;
     tio.c_cc[VMIN]=1;
     tio.c_cc[VTIME]=5;
-    cfsetospeed( &tio, B9600 );
-    cfsetispeed( &tio, B9600 );
+    cfsetospeed( &tio, B38400 );
+    cfsetispeed( &tio, B38400 );
     tcsetattr( fd, TCSANOW, &tio );
 
     if( tcgetattr( fd, &newTio ) == -1 ) {
