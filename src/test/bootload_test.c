@@ -20,7 +20,6 @@ static void processBootloadLineTest( CuTest* tc ) {
     expectedBytes[3] = 0x55;
     CuAssert( tc, "Did not process data line correctly.", processBootloadLine( "00 FF 55 AA \r\n" ) );
     CuAssert( tc, "Did not process all of the lines.", writeCount == 4 );
-    CuAssert( tc, "Did not process last line correctly.", processBootloadLine( "q" ) );
 }
 
 static void uartCloseTest( CuTest* tc ) {
