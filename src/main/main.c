@@ -14,12 +14,10 @@ static int bootloadMode = 0;
 static int startupAndConfigure( int argc, char *argv[] );
 static int openReadPipe( void );
 static int setCharByChar( void );
-static int motorCommandLine( char commandType );
+static int motorCommandLine( void );
 static int bootload( void );
 
 int main( int argc, char *argv[] ) {
-    char character;
-
     if( !gpioInit() ) {
         exit( EXIT_FAILURE );
     }
@@ -28,25 +26,19 @@ int main( int argc, char *argv[] ) {
         exit( EXIT_FAILURE );
     }
 
-    if( bootloadMode ) {
-        for( ;; ) {
+    for( ;; ) {
+        if( bootloadMode ) {
             if( !uartInit() || !bootload() || !uartClose() ) {
                 fprintf( stderr, "ERROR: Encountered problem while bootloading.\n" );
             }
             printf( "Completed bootload.\n" );
-            if( !openReadPipe() ) {
-                exit( EXIT_FAILURE );
+        } else {
+            if( !motorCommandLine() ) {
+                fprintf( stderr, "ERROR: Encountered problem while bootloading.\n" );
             }
         }
-    } else {
-        for( ;; ) {
-            if( read( 0, &character, 1 ) == 0 ) {
-                if( !openReadPipe() ) {
-                    exit( EXIT_FAILURE );
-                }
-                continue;
-            }
-            motorCommandLine( character );
+        if( !openReadPipe() ) {
+            exit( EXIT_FAILURE );
         }
     }
 
@@ -129,14 +121,13 @@ static int setCharByChar( void ) {
     return 1;
 }
 
-static int motorCommandLine( char commandType ) {
+static int motorCommandLine( void ) {
     char command[sizeof( Command_t ) + 1];
     size_t i;
 
-    command[0] = commandType;
-    for( i = 1; i < sizeof( Command_t ); i++ ) {
+    for( i = 0; i < sizeof( Command_t ); i++ ) {
         if( read( 0, &command[i], 1 ) != 1 ) {
-            fprintf( stderr, "ERROR: Could not read a byte from stdin while processing command of type %d.\n", commandType );
+            fprintf( stderr, "ERROR: Could not read a byte from stdin while processing command of type %d.\n", command[0] );
             return 0;
         }
     }
