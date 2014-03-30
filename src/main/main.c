@@ -122,7 +122,7 @@ static int setCharByChar( void ) {
 }
 
 static int motorCommandLine( void ) {
-    char command[sizeof( Command_t ) + 1];
+    char command[sizeof( Command_t ) + 2];
     size_t i;
 
     for( i = 0; i < sizeof( Command_t ); i++ ) {
@@ -132,6 +132,7 @@ static int motorCommandLine( void ) {
         }
     }
     command[sizeof( Command_t )] = '\0';
+    command[sizeof( Command_t ) + 1] = '\0';
 
     processMotorCommand( command );
 

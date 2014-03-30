@@ -29,7 +29,7 @@ int gpioClose( void ) {
 }
 
 int processMotorCommand( char *command ) {
-    char receive[sizeof( Command_t ) + 1];
+    char receive[sizeof( Command_t ) + 2];
     int successful = 0;
     size_t i;
 
@@ -37,15 +37,16 @@ int processMotorCommand( char *command ) {
         memset( receive, '\0', sizeof( receive ) );
 
         bcm2835_spi_transfernb( command, receive, sizeof( receive ) );
-        if( memcmp( command, receive + 1, sizeof( Command_t ) ) == 0 ) {
+        if( memcmp( command, receive + 2, sizeof( Command_t ) ) == 0 ) {
             successful = 1;
         }
     }
+    printf( "Command sent after %d attempt(s).\n", i );
 
     if( !successful ) {
         fprintf( stderr, "ERROR: Gave up on sending command after multiple attempts.\n" );
-        for( i = 0; i < sizeof( receive ); i++ ) {
-            printf( "Sent: %02x, Got: %02x\n", command[i], receive[i + 1] );
+        for( i = 0; i < sizeof( Command_t ); i++ ) {
+            printf( "Sent: %02x, Got: %02x\n", command[i], receive[i + 2] );
         }
     }
     return successful;
@@ -73,7 +74,7 @@ static void setupSpiPins( void ) {
     bcm2835_spi_begin();
     bcm2835_spi_setBitOrder( BCM2835_SPI_BIT_ORDER_MSBFIRST );
     bcm2835_spi_setDataMode( BCM2835_SPI_MODE0 );
-    bcm2835_spi_setClockDivider( BCM2835_SPI_CLOCK_DIVIDER_256 );
+    bcm2835_spi_setClockDivider( BCM2835_SPI_CLOCK_DIVIDER_128 );
     bcm2835_spi_chipSelect( BCM2835_SPI_CS0 );
     bcm2835_spi_setChipSelectPolarity( BCM2835_SPI_CS0, LOW );
 }
