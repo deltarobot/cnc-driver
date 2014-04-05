@@ -8,6 +8,9 @@
 #include "comm.h"
 #include "driver.h"
 
+#define EXTRA_BYTES 2
+#define PACKET_SIZE sizeof( Command_t ) * 3 + EXTRA_BYTES
+
 static char *readPipe = NULL;
 static int bootloadMode = 0;
 
@@ -122,19 +125,24 @@ static int setCharByChar( void ) {
 }
 
 static int motorCommandLine( void ) {
-    char command[sizeof( Command_t ) + 2];
-    size_t i;
+    char command[PACKET_SIZE];
+    char echoBack[PACKET_SIZE];
+    size_t i, j;
 
-    for( i = 0; i < sizeof( Command_t ); i++ ) {
-        if( read( 0, &command[i], 1 ) != 1 ) {
-            fprintf( stderr, "ERROR: Could not read a byte from stdin while processing command of type %d.\n", command[0] );
-            return 0;
+    for( i = 0; i < ( PACKET_SIZE - EXTRA_BYTES ) / 2; i++ ) {
+        for( j = 0; j < 2; j++ ) {
+            if( read( 0, &command[i * 2 + 1 - j], 1 ) != 1 ) {
+                fprintf( stderr, "ERROR: Could not read a byte from stdin while processing command of type %d.\n", command[0] );
+                return 0;
+            }
         }
     }
-    command[sizeof( Command_t )] = '\0';
-    command[sizeof( Command_t ) + 1] = '\0';
+    for( i = 0; i < EXTRA_BYTES; i++ ) {
+        command[PACKET_SIZE - i] = 0;
+    }
+    printf( "Got three commands to send.\n" );
 
-    processMotorCommand( command );
+    processMotorCommand( command, echoBack, PACKET_SIZE, EXTRA_BYTES );
 
     return 1;
 }

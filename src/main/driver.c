@@ -5,7 +5,6 @@
 #include "driver.h"
 #include "bcm2835.h"
 
-#define MAX_RETRIES 5
 #define ECHO_DELAY 1
 
 static void setupResetPin( void );
@@ -29,24 +28,22 @@ int gpioClose( void ) {
     return bcm2835_close();
 }
 
-int processMotorCommand( char *command ) {
-    char receive[sizeof( Command_t ) + 2];
+int processMotorCommand( char *command, char *receive, int size, int extraBytes ) {
     int successful = 0;
-    size_t i;
+    int i;
+    char temp;
+    
+    while( bcm2835_spi_transfer( 0 ) != 0xA5 );
+    bcm2835_spi_transfer( 0x5A );
 
-    for( i = 0; i < MAX_RETRIES && !successful; i++ ) {
-        memset( receive, '\0', sizeof( receive ) );
-
-        bcm2835_spi_transfernb( command, receive, sizeof( receive ) );
-        if( memcmp( command, receive + ECHO_DELAY, sizeof( Command_t ) ) == 0 ) {
-            successful = 1;
-        }
+    bcm2835_spi_transfernb( command, receive, size );
+    if( memcmp( command, receive + ECHO_DELAY, size - extraBytes ) == 0 ) {
+        successful = 1;
     }
-    printf( "Command sent after %d attempt(s).\n", i );
 
     if( !successful ) {
         fprintf( stderr, "ERROR: Gave up on sending command after multiple attempts.\n" );
-        for( i = 0; i < sizeof( Command_t ); i++ ) {
+        for( i = 0; i < size - extraBytes; i++ ) {
             printf( "Sent: %02x, Got: %02x\n", command[i], receive[i + ECHO_DELAY] );
         }
     }
