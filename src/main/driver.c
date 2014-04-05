@@ -6,6 +6,7 @@
 #include "bcm2835.h"
 
 #define MAX_RETRIES 5
+#define ECHO_DELAY 1
 
 static void setupResetPin( void );
 static void setupUartPins( void );
@@ -37,7 +38,7 @@ int processMotorCommand( char *command ) {
         memset( receive, '\0', sizeof( receive ) );
 
         bcm2835_spi_transfernb( command, receive, sizeof( receive ) );
-        if( memcmp( command, receive + 2, sizeof( Command_t ) ) == 0 ) {
+        if( memcmp( command, receive + ECHO_DELAY, sizeof( Command_t ) ) == 0 ) {
             successful = 1;
         }
     }
@@ -46,7 +47,7 @@ int processMotorCommand( char *command ) {
     if( !successful ) {
         fprintf( stderr, "ERROR: Gave up on sending command after multiple attempts.\n" );
         for( i = 0; i < sizeof( Command_t ); i++ ) {
-            printf( "Sent: %02x, Got: %02x\n", command[i], receive[i + 2] );
+            printf( "Sent: %02x, Got: %02x\n", command[i], receive[i + ECHO_DELAY] );
         }
     }
     return successful;
