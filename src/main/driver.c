@@ -37,6 +37,9 @@ int processMotorCommand( char *command, char *receive, int size, int extraBytes 
     bcm2835_spi_transfer( 0x5A );
 
     bcm2835_spi_transfernb( command, receive, size );
+    for( i = 0; i < size; i++ ) {
+        receive[i] = ~receive[i];
+    }
     if( memcmp( command, receive + ECHO_DELAY, size - extraBytes ) == 0 ) {
         successful = 1;
     }

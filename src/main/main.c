@@ -37,7 +37,7 @@ int main( int argc, char *argv[] ) {
             printf( "Completed bootload.\n" );
         } else {
             if( !motorCommandLine() ) {
-                fprintf( stderr, "ERROR: Encountered problem while bootloading.\n" );
+                fprintf( stderr, "ERROR: Encountered problem while processing command line.\n" );
             }
         }
         if( !openReadPipe() ) {
