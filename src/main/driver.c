@@ -10,21 +10,24 @@
 static void setupResetPin( void );
 static void setupUartPins( void );
 static void setupSpiPins( void );
+static void setupI2C( void );
 
 int gpioInit( void ) {
     if( !bcm2835_init() ) {
         return 0;
     }
-
+    
     setupResetPin();
     setupUartPins();
     setupSpiPins();
+    setupI2C();
 
     return 1;
 }
 
 int gpioClose( void ) {
     bcm2835_spi_end();
+    bcm2835_i2c_end();
     return bcm2835_close();
 }
 
@@ -78,3 +81,8 @@ static void setupSpiPins( void ) {
     bcm2835_spi_setChipSelectPolarity( BCM2835_SPI_CS0, LOW );
 }
 
+static void setupI2C( void ) {
+    bcm2835_i2c_begin();
+    bcm2835_i2c_setClockDivider(BCM2835_I2C_CLOCK_DIVIDER_626);
+    bcm2835_i2c_setSlaveAddress(32);
+}
