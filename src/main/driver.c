@@ -60,18 +60,30 @@ int processMotorCommand( char *command, char *receive, int size, int extraBytes 
 
 void processOutputGpoCommand( uint16_t outputData, uint16_t bitMask ) {
     //Used to set or clear multiple bits at a time
+    uint16_t originalMasked = gpoData & ~bitMask;
+    uint16_t newMasked = outputData & bitMask;
+    gpoData = originalMasked | newMasked;
+    sendGpoData();
 }
 
 void processSetGpoCommand( uint16_t setBits ) {
     //Used to set multiple bits at a time
+    gpoData = gpoData|setBits;
+    sendGpoData();
 }
 
 void processClearGpoCommand( uint16_t clearBits ) {
     //Used to clear multiple bits at a time
+    gpoData = gpoData&~clearBits;
+    sendGpoData();
 }
 
 static void sendGpoData( void ) {
     //Output gpoData to the I2C bus
+    char outputBuffer[2];
+    outputBuffer[0] = gpoData & 0xFF;
+    outputBuffer[1] = gpoData >> 8;
+    bcm2835_i2c_write( outputBuffer, 2);
 }
 
 int resetController( void ) {

@@ -32,7 +32,7 @@ static void pwmTest( CuTest *tc );
 static void i2cTest( CuTest *tc );
 
 static void startupTest( CuTest *tc ) {
-    bcm2835_set_debug( 1 );
+  //  bcm2835_set_debug( 1 );
 
     CuAssert( tc, "Did not successfully initialize.", gpioInit() );
 }
