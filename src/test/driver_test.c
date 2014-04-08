@@ -26,17 +26,18 @@ static RPiGPIOPin pins[TEST_PINS] = {
     RPI_V2_GPIO_P1_26
 };
 
-static void startupTest( CuTest* tc );
-static void allPinsTest( CuTest* tc );
-static void pwmTest( CuTest* tc );
+static void startupTest( CuTest *tc );
+static void allPinsTest( CuTest *tc );
+static void pwmTest( CuTest *tc );
+static void i2cTest( CuTest *tc );
 
-static void startupTest( CuTest* tc ) {
+static void startupTest( CuTest *tc ) {
     bcm2835_set_debug( 1 );
 
     CuAssert( tc, "Did not successfully initialize.", gpioInit() );
 }
 
-static void allPinsTest( CuTest* tc ) {
+static void allPinsTest( CuTest *tc ) {
     int i;
 
     for( i = 0; i < TEST_PINS; ++i ) {
@@ -58,7 +59,7 @@ static void allPinsTest( CuTest* tc ) {
     CuAssert( tc, "Drove all pins successfully.", 1 );
 }
 
-static void pwmTest( CuTest* tc ) {
+static void pwmTest( CuTest *tc ) {
     int data = 0;
 
     bcm2835_gpio_fsel( RPI_GPIO_P1_12, BCM2835_GPIO_FSEL_ALT5 );
@@ -79,12 +80,24 @@ static void pwmTest( CuTest* tc ) {
     CuAssert( tc, "Successfully drove the PWM pin.", 1 );
 }
 
+static void i2cTest( CuTest *tc ) {
+    gpoData = 0xFFFF;
+    
+    processOutputGpoCommand( 0xAA55, 0x00FF );
+    CuAssert( tc, "Should have only affected bits in bitmask.", gpoData == 0xFF55 );
+    processSetGpoCommand( 0x000A );
+    CuAssert( tc, "Should have set the bits given.", gpoData == 0xFF5F );
+    processClearGpoCommand( 0x5005 );
+    CuAssert( tc, "Should have cleared the bits given.", gpoData == 0xAF5A );
+}
+
 CuSuite* CuGetSuite( void ) {
     CuSuite* suite = CuSuiteNew();
 
     SUITE_ADD_TEST( suite, startupTest );
     SUITE_ADD_TEST( suite, allPinsTest );
     SUITE_ADD_TEST( suite, pwmTest );
+    SUITE_ADD_TEST( suite, i2cTest );
 
     return suite;
 }

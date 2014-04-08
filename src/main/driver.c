@@ -1,12 +1,14 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include "comm.h"
 #include "driver.h"
 #include "bcm2835.h"
 
 #define ECHO_DELAY 1
 
+static uint16_t gpoData;
+
+static void sendGpoData( void );
 static void setupResetPin( void );
 static void setupUartPins( void );
 static void setupSpiPins( void );
@@ -56,6 +58,22 @@ int processMotorCommand( char *command, char *receive, int size, int extraBytes 
     return successful;
 }
 
+void processOutputGpoCommand( uint16_t outputData, uint16_t bitMask ) {
+    //Used to set or clear multiple bits at a time
+}
+
+void processSetGpoCommand( uint16_t setBits ) {
+    //Used to set multiple bits at a time
+}
+
+void processClearGpoCommand( uint16_t clearBits ) {
+    //Used to clear multiple bits at a time
+}
+
+static void sendGpoData( void ) {
+    //Output gpoData to the I2C bus
+}
+
 int resetController( void ) {
     bcm2835_gpio_fsel( RPI_V2_GPIO_P1_07, BCM2835_GPIO_FSEL_OUTP );
     bcm2835_gpio_write( RPI_V2_GPIO_P1_07, LOW );
@@ -85,6 +103,6 @@ static void setupSpiPins( void ) {
 
 static void setupI2C( void ) {
     bcm2835_i2c_begin();
-    bcm2835_i2c_setClockDivider(BCM2835_I2C_CLOCK_DIVIDER_626);
-    bcm2835_i2c_setSlaveAddress(32);
+    bcm2835_i2c_setClockDivider( BCM2835_I2C_CLOCK_DIVIDER_626 );
+    bcm2835_i2c_setSlaveAddress( 32 );
 }
