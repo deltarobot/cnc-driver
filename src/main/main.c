@@ -8,18 +8,19 @@
 #include "comm.h"
 #include "driver.h"
 
+#define EXTRA_BYTES 2
+#define PACKET_SIZE sizeof( Command_t ) * 3 + EXTRA_BYTES
+
 static char *readPipe = NULL;
+static int bootloadMode = 0;
 
 static int startupAndConfigure( int argc, char *argv[] );
 static int openReadPipe( void );
 static int setCharByChar( void );
-static int motorCommandLine( char commandType );
-static int readLineByChar( char *line, size_t size, int fd );
+static int motorCommandLine( void );
 static int bootload( void );
 
 int main( int argc, char *argv[] ) {
-    char character;
-
     if( !gpioInit() ) {
         exit( EXIT_FAILURE );
     }
@@ -29,21 +30,18 @@ int main( int argc, char *argv[] ) {
     }
 
     for( ;; ) {
-        if( read( 0, &character, 1 ) == 0 ) {
-            if( !openReadPipe() ) {
-                exit( EXIT_FAILURE );   
-            }
-            continue;
-        }
-        if( character == Bootload ) {
+        if( bootloadMode ) {
             if( !uartInit() || !bootload() || !uartClose() ) {
                 fprintf( stderr, "ERROR: Encountered problem while bootloading.\n" );
             }
             printf( "Completed bootload.\n" );
-        } else if( character == EndOfFile ) {
-            break;
         } else {
-            motorCommandLine( character );
+            if( !motorCommandLine() ) {
+                fprintf( stderr, "ERROR: Encountered problem while processing command line.\n" );
+            }
+        }
+        if( !openReadPipe() ) {
+            exit( EXIT_FAILURE );
         }
     }
 
@@ -60,6 +58,9 @@ static int startupAndConfigure( int argc, char *argv[] ) {
     for( i = 1; i < argc; i++ ) {
         if( argv[i][0] == '-' ) {
             switch( argv[i][1] ) {
+                case 'b':
+                    bootloadMode = 1;
+                    break;
                 case 'r':
                     readPipe = argv[i + 1];
                     break;
@@ -82,7 +83,11 @@ static int openReadPipe( void ) {
 
     if( readPipe == NULL ) {
         fprintf( stderr, "No pipe to open, using stdin.\n" );
-        return setCharByChar();
+        if( bootloadMode ) {
+            return 1;
+        } else {
+            return setCharByChar();
+        }
     }
     
     fd = open( readPipe, O_RDONLY );
@@ -119,50 +124,40 @@ static int setCharByChar( void ) {
     return 1;
 }
 
-static int motorCommandLine( char commandType ) {
-    char command[sizeof( Command_t ) + 1];
-    size_t i;
+static int motorCommandLine( void ) {
+    char command[PACKET_SIZE];
+    char echoBack[PACKET_SIZE];
+    size_t i, j;
 
-    command[0] = commandType;
-    for( i = 1; i < sizeof( Command_t ); i++ ) {
-        if( read( 0, &command[i], 1 ) == -1 ) {
-            fprintf( stderr, "ERROR: Could not read a byte from stdin while processing command of type %d.\n", commandType );
-            return 0;
+    for( i = 0; i < ( PACKET_SIZE - EXTRA_BYTES ) / 2; i++ ) {
+        for( j = 0; j < 2; j++ ) {
+            if( read( 0, &command[i * 2 + 1 - j], 1 ) != 1 ) {
+                fprintf( stderr, "ERROR: Could not read a byte from stdin while processing command of type %d.\n", command[0] );
+                return 0;
+            }
         }
     }
-    command[sizeof( Command_t )] = '\0';
-
-    processMotorCommand( command );
-
-    return 1;
-}
-
-static int readLineByChar( char *line, size_t size, int fd ) {
-    size_t i;
-    char character;
-
-    for( i = 0; i < size - 1; i++ ) {
-        if( read( 0, &character, fd ) == 0 ) {
-            return 0;
-        }
-        line[i] = character;
-        if( line[i] == '\n' ) {
-            break;
-        }
+    for( i = 0; i < EXTRA_BYTES; i++ ) {
+        command[PACKET_SIZE - i] = 0;
     }
+    printf( "Got three commands to send.\n" );
 
-    line[i + 1] = '\0';
+    processMotorCommand( command, echoBack, PACKET_SIZE, EXTRA_BYTES );
+
     return 1;
-
 }
 
 static int bootload( void ) {
-    char line[100];
+    char *line = NULL;
+    size_t size = 0;
     int done = 0;
 
     while( !done ) {
-        readLineByChar( line, sizeof( line ), 1 );
-        if( ( unsigned char )line[0] == Bootload ) {
+        if( getline( &line, &size, stdin ) == 0 ) {
+            fprintf( stderr, "ERROR: Got to end of file while bootloading." );
+            return 0;
+        }
+        if( *line == 'q' ) {
             done = 1;
         } else if( !processBootloadLine( line ) ) {
             fprintf( stderr, "ERROR: Problem processing bootload line: %s.\n", line );
@@ -170,6 +165,7 @@ static int bootload( void ) {
         }
     }
 
+    free( line );
     return 1;
 }
 

@@ -3,9 +3,7 @@
 enum CommandType {
     NoOp = 0,
     ConstantSpeed = 1,
-    Accelerating = 2,
-    EndOfFile = 4,
-    Bootload = 255
+    Accelerating = 2
 };
 
 typedef struct Accelerating_t Accelerating_t;

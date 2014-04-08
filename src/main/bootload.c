@@ -60,10 +60,6 @@ int uartClose( void ) {
 int processBootloadLine( char *line ) {
     uint8_t upperByte, lowerByte;
 
-    if( *line == 'q' ) {
-        return 1;
-    }
-
     while( *line != '\0' && *line != '\r' && *line != '\n' ) {
         if( !readHexByte( line, &upperByte ) || !readHexByte( line + 3, &lowerByte ) ) {
             return 0;
