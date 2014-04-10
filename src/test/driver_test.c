@@ -81,6 +81,15 @@ static void pwmTest( CuTest *tc ) {
 }
 
 static void i2cTest( CuTest *tc ) {
+    char outputBuffer[2];
+    gpoData = 0xAA55;
+
+    outputBuffer[0] = gpoData & 0xFF;
+    outputBuffer[1] = gpoData >> 8;
+
+    CuAssert( tc, "Should be equal", ( ( char* )&gpoData )[0] == outputBuffer[0] );
+    CuAssert( tc, "Should be equal", ( ( char* )&gpoData )[1] == outputBuffer[1] );
+
     gpoData = 0xFFFF;
     
     processOutputGpoCommand( 0xAA55, 0x00FF );

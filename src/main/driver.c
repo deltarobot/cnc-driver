@@ -36,7 +36,6 @@ int gpioClose( void ) {
 int processMotorCommand( char *command, char *receive, int size, int extraBytes ) {
     int successful = 0;
     int i;
-    char temp;
     
     while( bcm2835_spi_transfer( 0 ) != 0xA5 );
     bcm2835_spi_transfer( 0x5A );
@@ -59,7 +58,6 @@ int processMotorCommand( char *command, char *receive, int size, int extraBytes 
 }
 
 void processOutputGpoCommand( uint16_t outputData, uint16_t bitMask ) {
-    //Used to set or clear multiple bits at a time
     uint16_t originalMasked = gpoData & ~bitMask;
     uint16_t newMasked = outputData & bitMask;
     gpoData = originalMasked | newMasked;
@@ -67,23 +65,17 @@ void processOutputGpoCommand( uint16_t outputData, uint16_t bitMask ) {
 }
 
 void processSetGpoCommand( uint16_t setBits ) {
-    //Used to set multiple bits at a time
-    gpoData = gpoData|setBits;
+    gpoData = gpoData | setBits;
     sendGpoData();
 }
 
 void processClearGpoCommand( uint16_t clearBits ) {
-    //Used to clear multiple bits at a time
-    gpoData = gpoData&~clearBits;
+    gpoData = gpoData &~ clearBits;
     sendGpoData();
 }
 
 static void sendGpoData( void ) {
-    //Output gpoData to the I2C bus
-    char outputBuffer[2];
-    outputBuffer[0] = gpoData & 0xFF;
-    outputBuffer[1] = gpoData >> 8;
-    bcm2835_i2c_write( outputBuffer, 2);
+    bcm2835_i2c_write( ( char* )&gpoData, 2 );
 }
 
 int resetController( void ) {
