@@ -149,14 +149,8 @@ static int motorCommandLine( void ) {
         command[i] = 0;
     }
     printf( "Got %d command(s) to send.\n", numberCommands );
-    for( i = 0; i < actualSize; i++ ) {
-        printf( "%02x", command[i] );
-    }
-    printf( "\n" );
 
     processMotorCommand( command, echoBack, numberCommands, actualSize, EXTRA_BYTES );
-
-    printf( "Sent successfully.\n" );
 
     return 1;
 }
