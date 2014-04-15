@@ -1,6 +1,8 @@
 #include "driver.c"
 #include "CuTest.h"
 
+#define PWM_CHANNEL 0
+#define RANGE 1024
 #define TEST_PINS 17
 #define DELAY_MS 1
 
@@ -24,13 +26,18 @@ static RPiGPIOPin pins[TEST_PINS] = {
     RPI_V2_GPIO_P1_26
 };
 
-void startupTest( CuTest* tc ) {
-    bcm2835_set_debug( 1 );
+static void startupTest( CuTest *tc );
+static void allPinsTest( CuTest *tc );
+static void pwmTest( CuTest *tc );
+static void i2cTest( CuTest *tc );
 
-    CuAssert( tc, "Did not successfully initialize.", gpioInit( NORMAL ) );
+static void startupTest( CuTest *tc ) {
+  //  bcm2835_set_debug( 1 );
+
+    CuAssert( tc, "Did not successfully initialize.", gpioInit() );
 }
 
-void allPinsTest( CuTest* tc ) {
+static void allPinsTest( CuTest *tc ) {
     int i;
 
     for( i = 0; i < TEST_PINS; ++i ) {
@@ -52,7 +59,7 @@ void allPinsTest( CuTest* tc ) {
     CuAssert( tc, "Drove all pins successfully.", 1 );
 }
 
-void pwmTest( CuTest* tc ) {
+static void pwmTest( CuTest *tc ) {
     int data = 0;
 
     bcm2835_gpio_fsel( RPI_GPIO_P1_12, BCM2835_GPIO_FSEL_ALT5 );
@@ -73,14 +80,33 @@ void pwmTest( CuTest* tc ) {
     CuAssert( tc, "Successfully drove the PWM pin.", 1 );
 }
 
+static void i2cTest( CuTest *tc ) {
+    char outputBuffer[2];
+    gpoData = 0xAA55;
+
+    outputBuffer[0] = gpoData & 0xFF;
+    outputBuffer[1] = gpoData >> 8;
+
+    CuAssert( tc, "Should be equal", ( ( char* )&gpoData )[0] == outputBuffer[0] );
+    CuAssert( tc, "Should be equal", ( ( char* )&gpoData )[1] == outputBuffer[1] );
+
+    gpoData = 0xFFFF;
+    
+    processOutputGpoCommand( 0xAA55, 0x00FF );
+    CuAssert( tc, "Should have only affected bits in bitmask.", gpoData == 0xFF55 );
+    processSetGpoCommand( 0x000A );
+    CuAssert( tc, "Should have set the bits given.", gpoData == 0xFF5F );
+    processClearGpoCommand( 0x5005 );
+    CuAssert( tc, "Should have cleared the bits given.", gpoData == 0xAF5A );
+}
+
 CuSuite* CuGetSuite( void ) {
     CuSuite* suite = CuSuiteNew();
 
     SUITE_ADD_TEST( suite, startupTest );
-	SUITE_ADD_TEST( suite, allPinsTest );
-	SUITE_ADD_TEST( suite, pwmTest );
-
-	gpioClose();
+    SUITE_ADD_TEST( suite, allPinsTest );
+    SUITE_ADD_TEST( suite, pwmTest );
+    SUITE_ADD_TEST( suite, i2cTest );
 
     return suite;
 }

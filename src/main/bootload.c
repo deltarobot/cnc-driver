@@ -7,6 +7,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include "bootload.h"
+#include "driver.h"
 
 #define UART "/dev/ttyAMA0"
 static int fd = -1;
@@ -28,20 +29,20 @@ int uartInit( void ) {
     tio.c_cflag = CS8 | CREAD | CLOCAL;
     tio.c_cc[VMIN]=1;
     tio.c_cc[VTIME]=5;
-    cfsetospeed( &tio, B9600 );
-    cfsetispeed( &tio, B9600 );
+    cfsetospeed( &tio, B38400 );
+    cfsetispeed( &tio, B38400 );
     tcsetattr( fd, TCSANOW, &tio );
 
     if( tcgetattr( fd, &newTio ) == -1 ) {
         return 0;
     }
 
-    if( !autoBaud() ) {
-        return 0;
-    }
-
     if ( memcmp( &tio, &newTio, sizeof( tio ) ) != 0 ) {
         fprintf( stderr, "WARNING: Terminal changes were not fully applied.\n" );
+    }
+
+    if( !autoBaud() ) {
+        return 0;
     }
 
     return 1;
@@ -58,10 +59,6 @@ int uartClose( void ) {
 
 int processBootloadLine( char *line ) {
     uint8_t upperByte, lowerByte;
-
-    if( *line == 'q' ) {
-        return 1;
-    }
 
     while( *line != '\0' && *line != '\r' && *line != '\n' ) {
         if( !readHexByte( line, &upperByte ) || !readHexByte( line + 3, &lowerByte ) ) {
@@ -102,6 +99,10 @@ static int autoBaud( void ) {
 
     printf( "Beginning Autobaud.\n" );
     while( !complete ) {
+        if( ( attempts - 1 ) % 5 == 0 ) {
+            printf( "Resetting the microcontroller.\n" );
+            resetController();
+        }
         printf( "Autobaud attempt %d.\n", attempts++ );
         if( write( fd, &autoBaud, 1 ) == -1 ) {
             fprintf( stderr, "ERROR: Could not write to the UART.\n" );

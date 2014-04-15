@@ -1,10 +1,10 @@
 objects = main driver bootload
-main_incl = driver bootload
-driver_incl = driver
+main_incl = driver bootload comm
+driver_incl = driver comm
 driver_lib = bcm2835
-bootload_incl = bootload
+bootload_incl = bootload driver
 
-cc=gcc -Isrc/include/ -Ilib/ -Wall -Wextra -pedantic -o
+cc=gcc -Isrc/include/ -Ilib/ -Wall -Wextra -o
 
 code = $(patsubst %,src/main/%.c,$1)
 incl = $(patsubst %,src/include/%.h,$1)
@@ -17,7 +17,7 @@ objects_no_main = $(filter-out main,$(objects))
 all_libs = $(foreach object,$(objects),$($(object)_lib))
 
 define make_object =
-$(call targ,$1): $(call code,$1) $(call incl,$($1_incl))
+$(call targ,$1): $(call code,$1) $(call incl,$($1_incl)) | target
 	$(cc) $(call targ,$1) -c $(call code,$1)
 endef
 
@@ -41,5 +41,15 @@ $(foreach object,$(objects_no_main),$(eval $(call make_test,$(object))))
 
 $(foreach lib,$(all_libs) CuTest,$(eval $(call make_lib,$(lib))))
 
+~/bin:
+	mkdir ~/bin
+
+target:
+	mkdir target
+
+install: all | ~/bin
+	cp target/driver ~/bin/
+
 clean:
-	rm -f target/*
+	rm -r target
+
