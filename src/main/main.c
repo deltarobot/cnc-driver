@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <termios.h>
+#include <time.h>
 #include <unistd.h>
 #include "bootload.h"
 #include "comm.h"
@@ -102,7 +103,7 @@ static int openReadPipe( void ) {
     dup( fd );
     close( fd );
 
-    fprintf( stderr, "Opened pipe at %s.\n", readPipe );
+    printf( "Opened pipe at %s.\n", readPipe );
     return 1;
 }
 
@@ -130,6 +131,7 @@ static int motorCommandLine( void ) {
     char echoBack[MAX_PACKET_SIZE];
     char numberCommands;
     size_t i, j, actualSize;
+    struct timespec time;
 
     if( read( 0, &numberCommands, 1 ) != 1 ) {
         return 0;
@@ -151,6 +153,12 @@ static int motorCommandLine( void ) {
     printf( "Got %d command(s) to send.\n", numberCommands );
 
     processMotorCommand( command, echoBack, numberCommands, actualSize, EXTRA_BYTES );
+
+    if( read( 0, &time, sizeof( struct timespec ) ) != sizeof( struct timespec ) ) {
+        fprintf( stderr, "ERROR: Could not read a byte from stdin while processing command of type %d.\n", command[0] );
+        return 0;
+    }
+    nanosleep( &time, NULL );
 
     return 1;
 }
