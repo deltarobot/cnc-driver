@@ -4,13 +4,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <termios.h>
+#include <time.h>
 #include <unistd.h>
 #include "bootload.h"
 #include "comm.h"
 #include "driver.h"
 
 #define EXTRA_BYTES 2
-#define PACKET_SIZE sizeof( Command_t ) * 3 + EXTRA_BYTES
+#define MAX_PACKET_SIZE sizeof( Command_t ) * 3 + EXTRA_BYTES
 
 static char *readPipe = NULL;
 static int bootloadMode = 0;
@@ -102,7 +103,6 @@ static int openReadPipe( void ) {
     dup( fd );
     close( fd );
 
-    fprintf( stderr, "Opened pipe at %s.\n", readPipe );
     return 1;
 }
 
@@ -126,11 +126,19 @@ static int setCharByChar( void ) {
 }
 
 static int motorCommandLine( void ) {
-    char command[PACKET_SIZE];
-    char echoBack[PACKET_SIZE];
-    size_t i, j;
+    char command[MAX_PACKET_SIZE];
+    char echoBack[MAX_PACKET_SIZE];
+    char numberCommands;
+    size_t i, j, actualSize;
+    struct timespec time;
 
-    for( i = 0; i < ( PACKET_SIZE - EXTRA_BYTES ) / 2; i++ ) {
+    if( read( 0, &numberCommands, 1 ) != 1 ) {
+        return 0;
+    }
+
+    actualSize = numberCommands * sizeof( Command_t );
+
+    for( i = 0; i < actualSize / 2; i++ ) {
         for( j = 0; j < 2; j++ ) {
             if( read( 0, &command[i * 2 + 1 - j], 1 ) != 1 ) {
                 fprintf( stderr, "ERROR: Could not read a byte from stdin while processing command of type %d.\n", command[0] );
@@ -138,12 +146,18 @@ static int motorCommandLine( void ) {
             }
         }
     }
-    for( i = 0; i < EXTRA_BYTES; i++ ) {
-        command[PACKET_SIZE - i] = 0;
+    for( i = actualSize; i < MAX_PACKET_SIZE; i++ ) {
+        command[i] = 0;
     }
-    printf( "Got three commands to send.\n" );
+    printf( "Got %d command(s) to send.\n", numberCommands );
 
-    processMotorCommand( command, echoBack, PACKET_SIZE, EXTRA_BYTES );
+    processMotorCommand( command, echoBack, numberCommands, actualSize, EXTRA_BYTES );
+
+    if( read( 0, &time, sizeof( struct timespec ) ) != sizeof( struct timespec ) ) {
+        fprintf( stderr, "ERROR: Could not read a byte from stdin while processing command of type %d.\n", command[0] );
+        return 0;
+    }
+    nanosleep( &time, NULL );
 
     return 1;
 }
