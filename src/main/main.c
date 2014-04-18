@@ -103,7 +103,6 @@ static int openReadPipe( void ) {
     dup( fd );
     close( fd );
 
-    printf( "Opened pipe at %s.\n", readPipe );
     return 1;
 }
 
