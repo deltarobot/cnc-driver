@@ -3,6 +3,7 @@
 #include <string.h>
 #include "driver.h"
 #include "bcm2835.h"
+#include <inttypes.h>
 
 #define ECHO_DELAY 1
 
@@ -13,6 +14,7 @@ static void setupResetPin( void );
 static void setupUartPins( void );
 static void setupSpiPins( void );
 static void setupI2C( void );
+static void initializeLcd( void );
 
 int gpioInit( void ) {
     if( !bcm2835_init() ) {
@@ -23,6 +25,7 @@ int gpioInit( void ) {
     setupUartPins();
     setupSpiPins();
     setupI2C();
+    initializeLcd();
 
     return 1;
 }
@@ -76,6 +79,34 @@ void processClearGpoCommand( uint16_t clearBits ) {
 
 static void sendGpoData( void ) {
     bcm2835_i2c_write( ( char* )&gpoData, 2 );
+}
+
+static void writeCommand( uint8_t command ){
+    gpoData = 0x0200 | command;
+    sendGpoData();
+    gpoData = 0x0000 | command;
+    sendGpoData();
+}
+
+static void writeData( uint8_t data ){
+     delay(2);
+     gpoData = 0x0300 | data;
+     sendGpoData();
+     gpoData = 0x0100 | data;
+     sendGpoData();
+
+}
+static void initializeLcd( void ) {
+    writeCommand( 0x38 );
+    writeCommand( 0x06 );
+    writeCommand( 0x0E );
+    writeCommand( 0x01 );
+    writeData( 0x43 );
+    writeData( 0x45 );
+    writeData( 0x45 );
+    writeData( 0x4E );
+    writeData( 0x43 );
+    writeCommand( 0x02 );
 }
 
 int resetController( void ) {
