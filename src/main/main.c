@@ -149,7 +149,6 @@ static int motorCommandLine( void ) {
     for( i = actualSize; i < MAX_PACKET_SIZE; i++ ) {
         command[i] = 0;
     }
-    printf( "Got %d command(s) to send.\n", numberCommands );
 
     processMotorCommand( command, echoBack, numberCommands, actualSize, EXTRA_BYTES );
 
