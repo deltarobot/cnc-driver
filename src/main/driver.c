@@ -9,12 +9,14 @@
 
 static uint16_t gpoData;
 
+static void writeLcdCommand( uint8_t data );
+static void writeLcdData( uint8_t data );
 static void sendGpoData( void );
 static void setupResetPin( void );
 static void setupUartPins( void );
 static void setupSpiPins( void );
-static void setupI2C( void );
-static void initializeLcd( void );
+static void setupI2c( void );
+static void setupLcd( void );
 
 int gpioInit( void ) {
     if( !bcm2835_init() ) {
@@ -24,8 +26,9 @@ int gpioInit( void ) {
     setupResetPin();
     setupUartPins();
     setupSpiPins();
-    setupI2C();
-    initializeLcd();
+    setupI2c();
+    setupLcd();
+    writeString( "CEENC" );
 
     return 1;
 }
@@ -60,6 +63,12 @@ int processMotorCommand( char *command, char *receive, int size, int extraBytes 
     return successful;
 }
 
+void writeString( char *string ) {
+    for( ; *string != '\0'; string++ ) {
+        writeLcdData( ( uint8_t )*string );
+    }
+}
+
 void processOutputGpoCommand( uint16_t outputData, uint16_t bitMask ) {
     uint16_t originalMasked = gpoData & ~bitMask;
     uint16_t newMasked = outputData & bitMask;
@@ -77,11 +86,7 @@ void processClearGpoCommand( uint16_t clearBits ) {
     sendGpoData();
 }
 
-static void sendGpoData( void ) {
-    bcm2835_i2c_write( ( char* )&gpoData, 2 );
-}
-
-static void writeCommand( uint8_t command ){
+static void writeLcdCommand( uint8_t command ) {
     processSetGpoCommand( 0x0200 );
     processOutputGpoCommand( command, 0x00FF );
     processClearGpoCommand( 0x0200 );
@@ -90,23 +95,14 @@ static void writeCommand( uint8_t command ){
     }
 }
 
-static void writeData( uint8_t data ){
+static void writeLcdData( uint8_t data ) {
     processSetGpoCommand( 0x0300 );
     processOutputGpoCommand( data, 0x00FF );
     processClearGpoCommand( 0x0300 );
 }
 
-static void initializeLcd( void ) {
-    writeCommand( 0x38 );
-    writeCommand( 0x06 );
-    writeCommand( 0x0C );
-    writeCommand( 0x01 );
-    writeData( 'C' );
-    writeData( 'E' );
-    writeData( 'E' );
-    writeData( 'N' );
-    writeData( 'C' );
-    writeCommand( 0x02 );
+static void sendGpoData( void ) {
+    bcm2835_i2c_write( ( char* )&gpoData, 2 );
 }
 
 int resetController( void ) {
@@ -136,8 +132,15 @@ static void setupSpiPins( void ) {
     bcm2835_spi_setChipSelectPolarity( BCM2835_SPI_CS0, LOW );
 }
 
-static void setupI2C( void ) {
+static void setupI2c( void ) {
     bcm2835_i2c_begin();
     bcm2835_i2c_setClockDivider( BCM2835_I2C_CLOCK_DIVIDER_626 );
     bcm2835_i2c_setSlaveAddress( 32 );
+}
+
+static void setupLcd( void ) {
+    writeLcdCommand( 0x38 );
+    writeLcdCommand( 0x06 );
+    writeLcdCommand( 0x0C );
+    writeLcdCommand( 0x01 );
 }
