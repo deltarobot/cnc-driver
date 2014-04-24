@@ -82,30 +82,30 @@ static void sendGpoData( void ) {
 }
 
 static void writeCommand( uint8_t command ){
-    gpoData = 0x0200 | command;
-    sendGpoData();
-    gpoData = 0x0000 | command;
-    sendGpoData();
+    processSetGpoCommand( 0x0200 );
+    processOutputGpoCommand( command, 0x00FF );
+    processClearGpoCommand( 0x0200 );
+    if( command == 0x01 ) {
+        delay( 2 );
+    }
 }
 
 static void writeData( uint8_t data ){
-     delay(2);
-     gpoData = 0x0300 | data;
-     sendGpoData();
-     gpoData = 0x0100 | data;
-     sendGpoData();
-
+    processSetGpoCommand( 0x0300 );
+    processOutputGpoCommand( data, 0x00FF );
+    processClearGpoCommand( 0x0300 );
 }
+
 static void initializeLcd( void ) {
     writeCommand( 0x38 );
     writeCommand( 0x06 );
-    writeCommand( 0x0E );
+    writeCommand( 0x0C );
     writeCommand( 0x01 );
-    writeData( 0x43 );
-    writeData( 0x45 );
-    writeData( 0x45 );
-    writeData( 0x4E );
-    writeData( 0x43 );
+    writeData( 'C' );
+    writeData( 'E' );
+    writeData( 'E' );
+    writeData( 'N' );
+    writeData( 'C' );
     writeCommand( 0x02 );
 }
 
