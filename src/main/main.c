@@ -62,6 +62,7 @@ static int startupAndConfigure( int argc, char *argv[] ) {
         if( argv[i][0] == '-' ) {
             switch( argv[i][1] ) {
                 case 'b':
+                    system( "cat /home/cnc/bootload-image > /home/cnc/bootload &" );
                     bootloadMode = 1;
                     break;
                 case 'r':
