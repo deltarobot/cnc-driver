@@ -69,12 +69,20 @@ void writeString( char *string ) {
     for( ; *string != '\0'; string++ ) {
         if( *string == '~' ) {
             if( lcdLocation / 16 == 0 ) {
-                lcdLocation = 16;
+                while( lcdLocation != 16 ) {
+                    writeString( " " );
+                }
             } else {
-                lcdLocation = 32;
+                while( lcdLocation != 0 ) {
+                    writeString( " " );
+                }
             }
         } else if( *string == '`' ) {
             lcdLocation = 32;
+        } else if( *string == '|' ) {
+            writeLcdCommand( 0x01 );
+            writeLcdCommand( 0x80 );
+            lcdLocation = 0;
         } else {
             writeLcdData( ( uint8_t )*string );
             lcdLocation++;
