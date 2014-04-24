@@ -40,24 +40,25 @@ int gpioClose( void ) {
     return bcm2835_close();
 }
 
-int processMotorCommand( char *command, char *receive, int size, int extraBytes ) {
+int processMotorCommand( char *command, char *receive, int numberCommands, int size, int extraBytes ) {
     int successful = 0;
     int i;
     
+    numberCommands |= ( numberCommands << 4 );
     while( bcm2835_spi_transfer( 0 ) != 0xA5 );
-    bcm2835_spi_transfer( 0x5A );
+    bcm2835_spi_transfer( numberCommands );
 
-    bcm2835_spi_transfernb( command, receive, size );
-    for( i = 0; i < size; i++ ) {
+    bcm2835_spi_transfernb( command, receive, size + extraBytes );
+    for( i = 0; i < size + extraBytes; i++ ) {
         receive[i] = ~receive[i];
     }
-    if( memcmp( command, receive + ECHO_DELAY, size - extraBytes ) == 0 ) {
+    if( memcmp( command, receive + ECHO_DELAY, size ) == 0 ) {
         successful = 1;
     }
 
     if( !successful ) {
         fprintf( stderr, "ERROR: Gave up on sending command after multiple attempts.\n" );
-        for( i = 0; i < size - extraBytes; i++ ) {
+        for( i = 0; i < size; i++ ) {
             printf( "Sent: %02x, Got: %02x\n", command[i], receive[i + ECHO_DELAY] );
         }
     }
