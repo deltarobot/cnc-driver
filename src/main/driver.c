@@ -8,6 +8,7 @@
 #define ECHO_DELAY 1
 
 static uint16_t gpoData;
+static int lcdLocation;
 
 static void writeLcdCommand( uint8_t data );
 static void writeLcdData( uint8_t data );
@@ -28,7 +29,7 @@ int gpioInit( void ) {
     setupSpiPins();
     setupI2c();
     setupLcd();
-    writeString( "CEENC" );
+    writeString( "     CeeNC~    Starting" );
 
     return 1;
 }
@@ -65,7 +66,26 @@ int processMotorCommand( char *command, char *receive, int size, int extraBytes 
 
 void writeString( char *string ) {
     for( ; *string != '\0'; string++ ) {
-        writeLcdData( ( uint8_t )*string );
+        if( *string == '~' ) {
+            if( lcdLocation / 16 == 0 ) {
+                lcdLocation = 16;
+            } else {
+                lcdLocation = 32;
+            }
+        } else if( *string == '`' ) {
+            lcdLocation = 32;
+        } else {
+            writeLcdData( ( uint8_t )*string );
+            lcdLocation++;
+
+        }
+        if( lcdLocation == 16 ) {
+            writeLcdCommand( 0x80 | 0x28 );
+        }
+        if( lcdLocation == 32 ) {
+            lcdLocation = 0;
+            writeLcdCommand( 0x80 );
+        }
     }
 }
 
@@ -143,4 +163,5 @@ static void setupLcd( void ) {
     writeLcdCommand( 0x06 );
     writeLcdCommand( 0x0C );
     writeLcdCommand( 0x01 );
+    lcdLocation = 0;
 }
