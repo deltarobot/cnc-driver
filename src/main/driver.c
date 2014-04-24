@@ -3,16 +3,21 @@
 #include <string.h>
 #include "driver.h"
 #include "bcm2835.h"
+#include <inttypes.h>
 
 #define ECHO_DELAY 1
 
 static uint16_t gpoData;
+static int lcdLocation;
 
+static void writeLcdCommand( uint8_t data );
+static void writeLcdData( uint8_t data );
 static void sendGpoData( void );
 static void setupResetPin( void );
 static void setupUartPins( void );
 static void setupSpiPins( void );
-static void setupI2C( void );
+static void setupI2c( void );
+static void setupLcd( void );
 
 int gpioInit( void ) {
     if( !bcm2835_init() ) {
@@ -22,7 +27,9 @@ int gpioInit( void ) {
     setupResetPin();
     setupUartPins();
     setupSpiPins();
-    setupI2C();
+    setupI2c();
+    setupLcd();
+    writeString( "     CeeNC~    Starting" );
 
     return 1;
 }
@@ -58,6 +65,39 @@ int processMotorCommand( char *command, char *receive, int numberCommands, int s
     return successful;
 }
 
+void writeString( char *string ) {
+    for( ; *string != '\0'; string++ ) {
+        if( *string == '~' ) {
+            if( lcdLocation / 16 == 0 ) {
+                while( lcdLocation != 16 ) {
+                    writeString( " " );
+                }
+            } else {
+                while( lcdLocation != 0 ) {
+                    writeString( " " );
+                }
+            }
+        } else if( *string == '`' ) {
+            lcdLocation = 32;
+        } else if( *string == '|' ) {
+            writeLcdCommand( 0x01 );
+            writeLcdCommand( 0x80 );
+            lcdLocation = 0;
+        } else {
+            writeLcdData( ( uint8_t )*string );
+            lcdLocation++;
+
+        }
+        if( lcdLocation == 16 ) {
+            writeLcdCommand( 0x80 | 0x28 );
+        }
+        if( lcdLocation == 32 ) {
+            lcdLocation = 0;
+            writeLcdCommand( 0x80 );
+        }
+    }
+}
+
 void processOutputGpoCommand( uint16_t outputData, uint16_t bitMask ) {
     uint16_t originalMasked = gpoData & ~bitMask;
     uint16_t newMasked = outputData & bitMask;
@@ -73,6 +113,21 @@ void processSetGpoCommand( uint16_t setBits ) {
 void processClearGpoCommand( uint16_t clearBits ) {
     gpoData = gpoData &~ clearBits;
     sendGpoData();
+}
+
+static void writeLcdCommand( uint8_t command ) {
+    processSetGpoCommand( 0x0200 );
+    processOutputGpoCommand( command, 0x00FF );
+    processClearGpoCommand( 0x0200 );
+    if( command == 0x01 ) {
+        delay( 2 );
+    }
+}
+
+static void writeLcdData( uint8_t data ) {
+    processSetGpoCommand( 0x0300 );
+    processOutputGpoCommand( data, 0x00FF );
+    processClearGpoCommand( 0x0300 );
 }
 
 static void sendGpoData( void ) {
@@ -106,8 +161,16 @@ static void setupSpiPins( void ) {
     bcm2835_spi_setChipSelectPolarity( BCM2835_SPI_CS0, LOW );
 }
 
-static void setupI2C( void ) {
+static void setupI2c( void ) {
     bcm2835_i2c_begin();
     bcm2835_i2c_setClockDivider( BCM2835_I2C_CLOCK_DIVIDER_626 );
     bcm2835_i2c_setSlaveAddress( 32 );
+}
+
+static void setupLcd( void ) {
+    writeLcdCommand( 0x38 );
+    writeLcdCommand( 0x06 );
+    writeLcdCommand( 0x0C );
+    writeLcdCommand( 0x01 );
+    lcdLocation = 0;
 }

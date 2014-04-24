@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -127,9 +128,10 @@ static int setCharByChar( void ) {
 
 static int motorCommandLine( void ) {
     char command[MAX_PACKET_SIZE];
+    char temp;
     char echoBack[MAX_PACKET_SIZE];
     char numberCommands;
-    size_t i, j, actualSize;
+    size_t i, actualSize;
     struct timespec time;
 
     if( read( 0, &numberCommands, 1 ) != 1 ) {
@@ -138,19 +140,26 @@ static int motorCommandLine( void ) {
 
     actualSize = numberCommands * sizeof( Command_t );
 
-    for( i = 0; i < actualSize / 2; i++ ) {
-        for( j = 0; j < 2; j++ ) {
-            if( read( 0, &command[i * 2 + 1 - j], 1 ) != 1 ) {
-                fprintf( stderr, "ERROR: Could not read a byte from stdin while processing command of type %d.\n", command[0] );
-                return 0;
-            }
+    for( i = 0; i < actualSize; i++ ) {
+        if( read( 0, &command[i], 1 ) != 1 ) {
+            fprintf( stderr, "ERROR: Could not read a byte from stdin while processing command of type %d.\n", command[0] );
+            return 0;
         }
     }
     for( i = actualSize; i < MAX_PACKET_SIZE; i++ ) {
         command[i] = 0;
     }
 
-    processMotorCommand( command, echoBack, numberCommands, actualSize, EXTRA_BYTES );
+    if( command[0] != LcdString ) {
+        for( i = 0; i < actualSize / 2; i++ ) {
+            temp = command[2 * i];
+            command[2 * i] = command[2 * i + 1];
+            command[2 * i + 1] = temp;
+        }
+        processMotorCommand( command, echoBack, numberCommands, actualSize, EXTRA_BYTES );
+    } else {
+        writeString( &command[offsetof( Command_t, command )] );
+    }
 
     if( read( 0, &time, sizeof( struct timespec ) ) != sizeof( struct timespec ) ) {
         fprintf( stderr, "ERROR: Could not read a byte from stdin while processing command of type %d.\n", command[0] );
